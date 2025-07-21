@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@kinde-oss/kinde-auth-nextjs": "^2.8.3",
     "@radix-ui/react-slot": "^1.2.3",
     "@sentry/nextjs": "^9.40.0",
     "class-variance-authority": "^0.7.1",

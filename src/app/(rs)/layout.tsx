@@ -1,13 +1,14 @@
-export default function RsLayout({
+import { Header } from '@/components/Header'
+
+export default function RepairShopLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="flex-none">
-        {children}
-      </div>
-    </div>
-  );
+    <>
+      <Header />
+      {children}
+    </>
+  )
 }

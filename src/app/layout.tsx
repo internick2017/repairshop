@@ -12,7 +12,6 @@ export const metadata: Metadata = {
     default: 'Computer Repair Shop',
   },
   description: 'Manage repair tickets and customers',
-  applicationName: 'Computer Repair Shop',
 }
 
 export default function RootLayout({
@@ -30,8 +29,8 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <Header />
-              {children}
+            {/* Header will be added to authenticated routes via their specific layouts */}
+            {children}
           </div>
         </ThemeProvider>
       </body>

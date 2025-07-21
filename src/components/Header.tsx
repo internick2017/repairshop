@@ -1,11 +1,12 @@
 'use client'
 
-import { HomeIcon, File, UsersRound, Moon, Sun, Bug } from "lucide-react";
+import { HomeIcon, File, UsersRound, Moon, Sun, Bug, LogOut } from "lucide-react";
 import Link from "next/link";
 import { NavButton } from "./NavButton";
 import { useTheme } from "next-themes";
 import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
+import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs";
 
 export function Header() {
     const { theme, setTheme } = useTheme();
@@ -29,9 +30,9 @@ export function Header() {
                 <div className="flex items-center gap-2">
                     <NavButton Icon={HomeIcon} href="/home" label="Home" />
 
-                    <Link 
-                        href="/" 
-                        className="flex items-center gap-2 ml-0 group" 
+                    <Link
+                        href="/"
+                        className="flex items-center gap-2 ml-0 group"
                         title="Home"
                     >
                         <h1 className="text-2xl font-bold hidden sm:block m-0 mt-1 
@@ -44,9 +45,9 @@ export function Header() {
                     </Link>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button 
-                        variant="ghost" 
-                        size="icon" 
+                    <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={toggleTheme}
                         className="hover:bg-accent hover:text-accent-foreground"
                     >
@@ -65,6 +66,12 @@ export function Header() {
                     {process.env.NODE_ENV === 'development' && (
                         <NavButton Icon={Bug} href="/sentry-example-page" label="Sentry Test" />
                     )}
+
+                    <Button variant="ghost" size="icon" asChild>
+                        <LogoutLink>
+                            <LogOut className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
+                        </LogoutLink>
+                    </Button>
                 </div>
             </div>
         </header>
