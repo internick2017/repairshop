@@ -125,6 +125,131 @@ const sampleCustomers = [
         zip: "95101",
         country: "US",
         notes: "Graphic designer, Mac specialist preferred"
+    },
+    {
+        firstName: "Carlos",
+        lastName: "Rodriguez",
+        email: "carlos.rodriguez@email.com",
+        phone: "555-1234",
+        address1: "890 Technology Park",
+        city: "Miami",
+        state: "FL",
+        zip: "33101",
+        country: "US",
+        notes: "IT professional, needs advanced troubleshooting"
+    },
+    {
+        firstName: "Elena",
+        lastName: "Kim",
+        email: "elena.kim@email.com",
+        phone: "555-5678",
+        address1: "234 Innovation Drive",
+        address2: "Apt 7C",
+        city: "Seattle",
+        state: "WA",
+        zip: "98101",
+        country: "US",
+        notes: "Software developer, multiple development machines"
+    },
+    {
+        firstName: "Marcus",
+        lastName: "Thompson",
+        email: "marcus.thompson@email.com",
+        phone: "555-9012",
+        address1: "567 Creative Lane",
+        city: "Atlanta",
+        state: "GA",
+        zip: "30301",
+        country: "US",
+        notes: "Music producer, specialized audio workstation needed"
+    },
+    {
+        firstName: "Olivia",
+        lastName: "Chen",
+        email: "olivia.chen@email.com",
+        phone: "555-3456",
+        address1: "678 Research Circle",
+        address2: "Unit 22",
+        city: "Boston",
+        state: "MA",
+        zip: "02101",
+        country: "US",
+        notes: "University researcher, high-performance computing needs"
+    },
+    {
+        firstName: "Ryan",
+        lastName: "Patel",
+        email: "ryan.patel@email.com",
+        phone: "555-7890",
+        address1: "345 Startup Boulevard",
+        city: "San Francisco",
+        state: "CA",
+        zip: "94101",
+        country: "US",
+        notes: "Startup founder, critical business equipment"
+    },
+    {
+        firstName: "Sophia",
+        lastName: "Nakamura",
+        email: "sophia.nakamura@email.com",
+        phone: "555-2468",
+        address1: "456 Innovation Street",
+        address2: "Penthouse Suite",
+        city: "Portland",
+        state: "OR",
+        zip: "97201",
+        country: "US",
+        notes: "Professional photographer, requires color-calibrated workstation"
+    },
+    {
+        firstName: "Ahmed",
+        lastName: "Hassan",
+        email: "ahmed.hassan@email.com",
+        phone: "555-1357",
+        address1: "789 Entrepreneur Avenue",
+        city: "Las Vegas",
+        state: "NV",
+        zip: "89101",
+        country: "US",
+        notes: "E-sports team manager, high-performance gaming infrastructure"
+    },
+    {
+        firstName: "Isabella",
+        lastName: "Martinez",
+        email: "isabella.martinez@email.com",
+        phone: "555-9876",
+        address1: "234 Creative Plaza",
+        address2: "Studio 3B",
+        city: "New Orleans",
+        state: "LA",
+        zip: "70101",
+        country: "US",
+        notes: "Independent film director, video editing and rendering specialist"
+    },
+    {
+        firstName: "Ethan",
+        lastName: "Williams",
+        email: "ethan.williams@email.com",
+        phone: "555-4321",
+        address1: "567 Medical Center Road",
+        city: "Denver",
+        state: "CO",
+        zip: "80201",
+        country: "US",
+        notes: "Medical researcher, requires specialized scientific computing setup"
+    },
+    {
+        firstName: "Zara",
+        lastName: "Khan",
+        email: "zara.khan@email.com",
+        phone: "555-6543",
+        address1: "890 Sustainable Tech Lane",
+        address2: "Green Tech Hub",
+        city: "Austin",
+        state: "TX",
+        zip: "73301",
+        country: "US",
+        notes: "Climate tech startup founder, eco-friendly computing solutions"
     }
 ];
 
@@ -227,6 +352,146 @@ const sampleTickets = [
         description: "Customer wants to upgrade gaming PC RAM from 16GB to 32GB. Needs compatibility check and installation.",
         completed: false,
         tech: "unassigned"
+    },
+    {
+        customerId: 11, // Carlos Rodriguez
+        title: "Network security assessment",
+        description: "Comprehensive security audit for home office network. Concerns about potential vulnerabilities.",
+        completed: false,
+        tech: "Mike Chen"
+    },
+    {
+        customerId: 12, // Elena Kim
+        title: "Development machine performance optimization",
+        description: "Multiple IDEs and virtual machines causing system slowdown. Need performance tuning and RAM upgrade.",
+        completed: false,
+        tech: "Sarah Kim"
+    },
+    {
+        customerId: 13, // Marcus Thompson
+        title: "Audio workstation setup",
+        description: "Configure high-end audio interface, calibrate studio monitors, and optimize DAW performance.",
+        completed: false,
+        tech: "Alex Rodriguez"
+    },
+    {
+        customerId: 14, // Olivia Chen
+        title: "Research cluster maintenance",
+        description: "Troubleshoot and maintain high-performance computing cluster. Update scientific computing software.",
+        completed: false,
+        tech: "Maria Lopez"
+    },
+    {
+        customerId: 15, // Ryan Patel
+        title: "Startup infrastructure consultation",
+        description: "Evaluate and recommend IT infrastructure for growing startup. Cloud backup and security solutions.",
+        completed: true,
+        tech: "Sarah Kim"
+    },
+    {
+        customerId: 11, // Carlos Rodriguez
+        title: "Advanced malware removal",
+        description: "Suspected advanced persistent threat. Forensic analysis and complete system restoration required.",
+        completed: false,
+        tech: "Alex Rodriguez"
+    },
+    {
+        customerId: 12, // Elena Kim
+        title: "Cross-platform development environment",
+        description: "Set up development environment with Windows, macOS, and Linux virtual machines for cross-platform testing.",
+        completed: true,
+        tech: "Mike Chen"
+    },
+    {
+        customerId: 13, // Marcus Thompson
+        title: "Audio file recovery",
+        description: "Recover critical audio project files from failed external hard drive. Time-sensitive professional work.",
+        completed: false,
+        tech: "Maria Lopez"
+    },
+    {
+        customerId: 14, // Olivia Chen
+        title: "Research data backup solution",
+        description: "Implement redundant backup system for large scientific datasets. Ensure data integrity and quick recovery.",
+        completed: true,
+        tech: "Sarah Kim"
+    },
+    {
+        customerId: 15, // Ryan Patel
+        title: "Cloud migration consultation",
+        description: "Assist in migrating startup infrastructure to cloud platform. Optimize costs and performance.",
+        completed: true,
+        tech: "Mike Chen"
+    },
+    {
+        customerId: 16, // Sophia Nakamura
+        title: "Color-calibrated workstation setup",
+        description: "Professional photography workstation needs color-accurate monitors, color calibration tools, and high-end photo editing software configuration.",
+        completed: false,
+        tech: "Maria Lopez"
+    },
+    {
+        customerId: 17, // Ahmed Hassan
+        title: "E-sports team computer network",
+        description: "Set up high-performance gaming network for professional e-sports team. Low-latency configuration, multiple gaming PCs, streaming setup.",
+        completed: false,
+        tech: "Mike Chen"
+    },
+    {
+        customerId: 18, // Isabella Martinez
+        title: "Video editing workstation overhaul",
+        description: "Upgrade video editing workstation for independent film production. Requires GPU acceleration, large storage solution, and color grading tools.",
+        completed: false,
+        tech: "Alex Rodriguez"
+    },
+    {
+        customerId: 19, // Ethan Williams
+        title: "Scientific computing infrastructure",
+        description: "Configure high-performance computing cluster for medical research. Requires specialized software, data security, and computational analysis tools.",
+        completed: false,
+        tech: "Sarah Kim"
+    },
+    {
+        customerId: 20, // Zara Khan
+        title: "Sustainable computing solution design",
+        description: "Design energy-efficient computing infrastructure for climate tech startup. Focus on renewable energy integration and minimal carbon footprint.",
+        completed: true,
+        tech: "Mike Chen"
+    },
+    {
+        customerId: 16, // Sophia Nakamura
+        title: "Backup and archival system for photography",
+        description: "Implement robust backup solution for large RAW image collections. Requires RAID storage, cloud sync, and metadata preservation.",
+        completed: false,
+        tech: "Sarah Kim"
+    },
+    {
+        customerId: 17, // Ahmed Hassan
+        title: "Streaming PC performance optimization",
+        description: "Optimize streaming PC for professional e-sports broadcasting. Tune OBS settings, improve stream quality, and resolve encoding issues.",
+        completed: true,
+        tech: "Alex Rodriguez"
+    },
+    {
+        customerId: 18, // Isabella Martinez
+        title: "Portable editing rig for location work",
+        description: "Build compact, high-performance laptop for on-location film editing. Must support 4K video editing and have long battery life.",
+        completed: false,
+        tech: "Maria Lopez"
+    },
+    {
+        customerId: 19, // Ethan Williams
+        title: "Medical data analysis workstation",
+        description: "Configure specialized workstation for complex medical data analysis. Requires machine learning libraries, GPU acceleration, and secure data handling.",
+        completed: true,
+        tech: "Mike Chen"
+    },
+    {
+        customerId: 20, // Zara Khan
+        title: "Green tech server room optimization",
+        description: "Redesign server room for maximum energy efficiency. Implement cooling optimization, renewable energy integration, and carbon tracking.",
+        completed: false,
+        tech: "Sarah Kim"
     }
 ];
 
@@ -266,6 +531,7 @@ export async function clearDatabase() {
     try {
         console.log("🧹 Clearing database...");
         
+        // Truncate tables instead of deleting to reset sequences
         await db.delete(tickets);
         console.log("✅ Cleared tickets table");
         
