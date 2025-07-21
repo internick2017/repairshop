@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1753069333164,
+      "tag": "0000_optimal_machine_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1753069422561,
+      "tag": "0001_open_yellow_claw",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1753069957373,
+      "tag": "0002_stale_impossible_man",
+      "breakpoints": true
+    }
+  ]
+}
