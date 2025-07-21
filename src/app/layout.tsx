@@ -7,8 +7,12 @@ import { Header } from '@/components/Header'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Computer Repair Shop',
+  title: {
+    template: '%s | Computer Repair Shop',
+    default: 'Computer Repair Shop',
+  },
   description: 'Manage repair tickets and customers',
+  applicationName: 'Computer Repair Shop',
 }
 
 export default function RootLayout({
