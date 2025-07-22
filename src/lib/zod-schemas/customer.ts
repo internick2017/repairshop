@@ -10,14 +10,14 @@ export const customerInsertSchema = createInsertSchema(customers, {
     address1: () => z.string().min(1, { message: "Address is required" }),
     address2: () => z.string().optional(),
     city: () => z.string().min(1, { message: "City is required" }),
-    state: () => z.string().length(2, { message: "State must be 2 characters" }),
-    zip: () => z.string().regex(/^\d{5}$/, { message: "Invalid ZIP code" }),
+    state: () => z.string().min(1, { message: "State/Region is required" }),
+    zip: () => z.string().regex(/^\d{5}(-\d{4})?$/, { message: "Invalid ZIP code format" }),
     country: () => z.string().min(1, { message: "Country is required" }),
     notes: () => z.string().optional(),
+    active: () => z.boolean(),
 });
 
 export const customerSelectSchema = createSelectSchema(customers);
 
 export type InsertCustomerSchema = z.infer<typeof customerInsertSchema>;
-
 export type SelectCustomerSchema = z.infer<typeof customerSelectSchema>;
