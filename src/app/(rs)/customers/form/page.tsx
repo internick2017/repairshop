@@ -1,20 +1,20 @@
 import { getCustomer } from "@/lib/queries/getCustomer";
 import { BackButton } from "@/components/BackButton";
 import * as Sentry from "@sentry/nextjs";
+import { CustomerForm } from "./CustomerForm";
 
-// Define the params type
-interface CustomerFormPageParams {
-    customerId?: string;
-}
+
 
 // Define the component props type
 interface CustomerFormPageProps {
-    params: CustomerFormPageParams;
+    searchParams: {
+        customerId?: string;
+    }
 }
 
-export default async function CustomerFormPage({ params }: CustomerFormPageProps) {
+export default async function CustomerFormPage({ searchParams }: CustomerFormPageProps) {
     try {
-        const { customerId } = await params;
+        const { customerId } = await Promise.resolve(searchParams);
         
         // If no customerId, show new customer form
         if (!customerId) {
@@ -22,8 +22,8 @@ export default async function CustomerFormPage({ params }: CustomerFormPageProps
                 <div className="max-w-2xl mx-auto p-6">
                     <div className="flex items-center mb-6 space-x-4">
                         <BackButton href="/customers" label="Back to Customers" />
-                        <h2 className="text-2xl font-bold">New Customer Form</h2>
                     </div>
+                    <CustomerForm />
                 </div>
             );
         }
@@ -40,13 +40,13 @@ export default async function CustomerFormPage({ params }: CustomerFormPageProps
             );
         }
         return (
-            <div>
+            <div className="max-w-2xl mx-auto p-6">
                 <div className="flex items-center mb-6 space-x-4">
                     <BackButton href="/customers" label="Back to Customers" />
-                    <h2 className="text-2xl font-bold">Customer Form for {customer.firstName} {customer.lastName}</h2>
                 </div>
+                <CustomerForm customer={customer} />
             </div>
-        )
+        );
     } catch (error) {
         // Log error to Sentry with context
         Sentry.captureException(error, {
@@ -55,8 +55,8 @@ export default async function CustomerFormPage({ params }: CustomerFormPageProps
                 action: 'load_customer_form'
             },
             extra: {
-                customerId: params.customerId,
-                params: params
+                customerId: searchParams.customerId,
+                searchParams: searchParams
             }
         });
 
