@@ -95,7 +95,7 @@ export async function GET() {
             });
             
             if ((usersError as { status?: number }).status === 403) {
-                console.log('Using fallback user data due to Management API access issue');
+                // Using fallback user data due to Management API access issue
                 // Return fallback data for development/testing
                 const fallbackUsers = [
                     {

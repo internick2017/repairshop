@@ -2,7 +2,7 @@ import { withAuth } from "@kinde-oss/kinde-auth-nextjs/middleware";
 
 
 export default withAuth(async function middleware() {
-   // console.log(request)
+   // Request logging disabled
 }, {
     isReturnToCurrentPage: true,
 }

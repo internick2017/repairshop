@@ -124,7 +124,7 @@ export default async function TicketFormPage({ searchParams }: TicketFormPagePro
                 });
                 
                 const usersResponse = await Users.getUsers();
-                console.log(usersResponse);
+        
                 users = usersResponse?.users?.map((kindeUser: KindeUser) => ({
                     id: kindeUser.id || '',
                     email: kindeUser.email || '',

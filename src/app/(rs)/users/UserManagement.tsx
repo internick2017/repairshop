@@ -71,7 +71,6 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                 setError(data.error || "Failed to fetch users");
             }
         } catch (error) {
-            console.error('Fetch error:', error);
             setError("Failed to fetch users");
         } finally {
             setLoading(false);
@@ -149,7 +148,6 @@ export function UserManagement({ currentUser }: UserManagementProps) {
             }
         } catch (error) {
             setError("An error occurred while saving the user");
-            console.error('Error saving user:', error);
         } finally {
             setActionLoading(false);
         }
@@ -176,7 +174,6 @@ export function UserManagement({ currentUser }: UserManagementProps) {
             }
         } catch (error) {
             setError("An error occurred while deleting the user");
-            console.error('Error deleting user:', error);
         } finally {
             setActionLoading(false);
         }
@@ -221,7 +218,6 @@ export function UserManagement({ currentUser }: UserManagementProps) {
             }
         } catch (error) {
             setError("An error occurred while updating user status");
-            console.error('Error updating user status:', error);
         } finally {
             setActionLoading(false);
         }

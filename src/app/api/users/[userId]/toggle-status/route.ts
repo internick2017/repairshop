@@ -82,7 +82,7 @@ export async function PUT(
             console.error('Error updating user status in Kinde:', updateError);
             
             if ((updateError as { status?: number }).status === 403) {
-                console.log('Using fallback status update response due to Management API access issue');
+                // Using fallback status update response due to Management API access issue
                 // Return fallback response for development/testing
                 return NextResponse.json({ 
                     success: true, 

@@ -85,7 +85,7 @@ export function CustomerForm({ customer }: CustomerFormProps) {
         if (!isManager && customer) {
             data.active = Boolean(customer.active);
         }
-        console.log(data);
+
     }
 
     return (

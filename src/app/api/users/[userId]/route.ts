@@ -44,9 +44,7 @@ export async function PUT(
         }
 
         const body = await request.json();
-        console.log('API received body:', body);
         const validatedData = updateUserSchema.parse(body);
-        console.log('API validated data:', validatedData);
 
         // Initialize Kinde Management API
         if (!process.env.KINDE_DOMAIN || !process.env.KINDE_MANAGEMENT_CLIENT_ID || !process.env.KINDE_MANAGEMENT_CLIENT_SECRET) {
@@ -61,11 +59,7 @@ export async function PUT(
             ? process.env.KINDE_DOMAIN 
             : `https://${process.env.KINDE_DOMAIN}`;
 
-        console.log('Initializing Kinde Management API with:', {
-            kindeDomain,
-            clientId: process.env.KINDE_MANAGEMENT_CLIENT_ID ? '***' : 'MISSING',
-            clientSecret: process.env.KINDE_MANAGEMENT_CLIENT_SECRET ? '***' : 'MISSING'
-        });
+
 
         await kindeInit({
             kindeDomain: kindeDomain,
@@ -73,7 +67,7 @@ export async function PUT(
             clientSecret: process.env.KINDE_MANAGEMENT_CLIENT_SECRET,
         });
 
-        console.log('Kinde Management API initialized successfully');
+
 
         // Update user in Kinde
         const updateData: {
@@ -88,17 +82,15 @@ export async function PUT(
         if (validatedData.lastName) updateData.family_name = validatedData.lastName;
         if (validatedData.isActive !== undefined) updateData.is_suspended = !validatedData.isActive;
         
-        console.log('Sending to Kinde API:', updateData);
+
 
         let updatedUser: KindeUserResponse;
         try {
-            console.log('Attempting to update user in Kinde with data:', updateData);
             const response = await Users.updateUser({
                 id: params.userId,
                 requestBody: updateData
             });
             
-            console.log('Kinde API response:', response);
             updatedUser = response as KindeUserResponse;
         } catch (updateError: unknown) {
             console.error('Error updating user in Kinde:', updateError);
@@ -109,7 +101,6 @@ export async function PUT(
             });
             
             if ((updateError as { status?: number }).status === 403) {
-                console.log('Using fallback response due to 403 error');
                 // Return fallback response for development/testing
                 return NextResponse.json({ 
                     success: true, 
@@ -142,7 +133,7 @@ export async function PUT(
             isActive: validatedData.isActive !== undefined ? validatedData.isActive : (updatedUser.is_suspended === false)
         };
         
-        console.log('Sending response:', responseUser);
+
 
         return NextResponse.json({ 
             success: true, 
