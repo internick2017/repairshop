@@ -37,6 +37,22 @@ export const tickets = pgTable("tickets", {
     techIdx: index("tickets_tech_idx").on(table.tech),
 }));
 
+// User permissions table for storing user roles and permissions
+export const userPermissions = pgTable("user_permissions", {
+    id: serial("id").primaryKey(),
+    kindeUserId: varchar("kinde_user_id", { length: 255 }).notNull().unique(),
+    email: varchar("email", { length: 255 }).notNull(),
+    role: varchar("role", { length: 50 }).notNull().default("Regular User"), // Manager, Regular User, etc.
+    permissions: text("permissions"), // JSON string of specific permissions
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
+}, (table) => ({
+    kindeUserIdIdx: index("user_permissions_kinde_user_id_idx").on(table.kindeUserId),
+    emailIdx: index("user_permissions_email_idx").on(table.email),
+    roleIdx: index("user_permissions_role_idx").on(table.role),
+}));
+
 // create relations
 export const customerRelations = relations(customers, ({ many }) => ({
     tickets: many(tickets),

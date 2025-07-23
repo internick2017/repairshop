@@ -1,16 +1,17 @@
 'use client'
 
-import { HomeIcon, File, UsersRound, Moon, Sun, Bug, LogOut } from "lucide-react";
+import { HomeIcon, File, User, Users, Moon, Sun, Bug, LogOut } from "lucide-react";
 import Link from "next/link";
 import { NavButton } from "./NavButton";
 import { useTheme } from "next-themes";
 import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
-import { LogoutLink } from "@kinde-oss/kinde-auth-nextjs";
+import { LogoutLink, useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 
 export function Header() {
     const { theme, setTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
+    const { getPermission, isLoading } = useKindeBrowserClient();
 
     // useEffect only runs on the client, so now we can safely show the UI
     useEffect(() => {
@@ -20,6 +21,8 @@ export function Header() {
     const toggleTheme = () => {
         setTheme(theme === 'dark' ? 'light' : 'dark');
     };
+
+    const isManager = !isLoading && getPermission("manager")?.isGranted;
 
     return (
         <header className="animate-slide bg-background border-b sticky top-0 z-50 
@@ -62,7 +65,10 @@ export function Header() {
                         <span className="sr-only">Toggle theme</span>
                     </Button>
                     <NavButton Icon={File} href="/tickets" label="Tickets" />
-                    <NavButton Icon={UsersRound} href="/customers" label="Customers" />
+                    <NavButton Icon={User} href="/customers" label="Customers" />
+                    {isManager && (
+                        <NavButton Icon={Users} href="/users" label="Users" />
+                    )}
                     {process.env.NODE_ENV === 'development' && (
                         <NavButton Icon={Bug} href="/sentry-example-page" label="Sentry Test" />
                     )}

@@ -506,7 +506,7 @@ export async function seedDatabase() {
 
         // Insert tickets (using the actual customer IDs from the database)
         console.log("🎫 Inserting tickets...");
-        const ticketsWithCorrectIds = sampleTickets.map((ticket, index) => ({
+        const ticketsWithCorrectIds = sampleTickets.map((ticket) => ({
             ...ticket,
             customerId: insertedCustomers[ticket.customerId - 1].id // Map to actual database IDs
         }));

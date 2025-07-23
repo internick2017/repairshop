@@ -784,6 +784,15 @@
     "@kinde/jwt-decoder" "^0.2.0"
     jsrsasign "^11.1.0"
 
+"@kinde/management-api-js@^0.14.0":
+  version "0.14.0"
+  resolved "https://registry.yarnpkg.com/@kinde/management-api-js/-/management-api-js-0.14.0.tgz#0881b5374c255539199b34120b528397d8261e26"
+  integrity sha512-4BUsr7+eHI9hIFGkqasmQ5oUAYiM2LaKmQVyOB4Gf5K+7DToHXiHZCmlgB/syeu3cBzItj04zLgOjEdg1lkXNA==
+  dependencies:
+    "@kinde/jwt-decoder" "^0.2.0"
+    aws-jwt-verify "^5.0.0"
+    dotenv "^16.4.5"
+
 "@napi-rs/wasm-runtime@^0.2.11":
   version "0.2.12"
   resolved "https://registry.yarnpkg.com/@napi-rs/wasm-runtime/-/wasm-runtime-0.2.12.tgz#3e78a8b96e6c33a6c517e1894efbd5385a7cb6f2"
@@ -2266,6 +2275,11 @@ available-typed-arrays@^1.0.7:
   dependencies:
     possible-typed-array-names "^1.0.0"
 
+aws-jwt-verify@^5.0.0:
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/aws-jwt-verify/-/aws-jwt-verify-5.1.0.tgz#13613c94e9bfbd4c235a8b15ffcf79a731efa387"
+  integrity sha512-98ioOBMyrLU5jW5rPvkJo20XlNB2rAX3tZR3BM6AamfBkOoSRLV1EyGkbgHQzgFOWyQ7yV8+tce6M24rOpMkgw==
+
 axe-core@^4.10.0:
   version "4.10.3"
   resolved "https://registry.npmjs.org/axe-core/-/axe-core-4.10.3.tgz"
@@ -2595,7 +2609,7 @@ doctrine@^2.1.0:
   dependencies:
     esutils "^2.0.2"
 
-dotenv@^16.3.1:
+dotenv@^16.3.1, dotenv@^16.4.5:
   version "16.6.1"
   resolved "https://registry.npmjs.org/dotenv/-/dotenv-16.6.1.tgz"
   integrity sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==
