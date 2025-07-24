@@ -10,14 +10,31 @@ import { z } from "zod";
 import React, { useMemo, useState } from "react";
 import { allCountries } from "country-region-data";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { createCustomer, updateCustomer } from "@/lib/actions";
+import { useSafeAction } from "@/lib/hooks/use-safe-action";
+import { useRouter } from "next/navigation";
 type CustomerFormProps = {
     customer?: SelectCustomerSchema;
 }
 
 export function CustomerForm({ customer }: CustomerFormProps) {
     const {getPermission, isLoading} = useKindeBrowserClient();
+    const router = useRouter();
 
     const isManager = !isLoading && getPermission("manager")?.isGranted;
+
+    // Safe Actions hooks
+    const { execute: executeCreate, isLoading: isCreating } = useSafeAction(createCustomer, {
+        onSuccess: () => {
+            router.push("/customers");
+        },
+    });
+
+    const { execute: executeUpdate, isLoading: isUpdating } = useSafeAction(updateCustomer, {
+        onSuccess: () => {
+            router.push("/customers");
+        },
+    });
 
     const defaultValues: z.infer<typeof customerInsertSchema> = customer ? {
         firstName: customer.firstName,
@@ -86,6 +103,13 @@ export function CustomerForm({ customer }: CustomerFormProps) {
             data.active = Boolean(customer.active);
         }
 
+        if (customer) {
+            // Update existing customer
+            await executeUpdate({ id: customer.id, ...data });
+        } else {
+            // Create new customer
+            await executeCreate(data);
+        }
     }
 
     return (
@@ -328,14 +352,23 @@ export function CustomerForm({ customer }: CustomerFormProps) {
                     <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200 dark:border-gray-800">
                         <Button 
                             type="submit" 
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors"
+                            disabled={isCreating || isUpdating}
+                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {customer ? "Update Customer" : "Create Customer"}
+                            {isCreating || isUpdating ? (
+                                <span className="flex items-center space-x-2">
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    <span>{customer ? "Updating..." : "Creating..."}</span>
+                                </span>
+                            ) : (
+                                customer ? "Update Customer" : "Create Customer"
+                            )}
                         </Button>
                         <Button 
                             type="button" 
                             variant="outline" 
-                            className="flex-1 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium py-3 px-6 rounded-lg transition-colors"
+                            disabled={isCreating || isUpdating}
+                            className="flex-1 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={() => {
                                 form.reset();
                                 setSelectedCountry(defaultValues.country || countryOptions[0]?.value || "");

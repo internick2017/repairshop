@@ -10,7 +10,7 @@ export const customers = pgTable("customers", {
     address1: varchar("address1", { length: 255 }).notNull(),
     address2: varchar("address2", { length: 255 }),
     city: varchar("city", { length: 255 }).notNull(),
-    state: varchar("state", { length: 255 }).notNull(), // Increased from 2 to handle full state names
+    state: varchar("state", { length: 255 }).notNull(),
     zip: varchar("zip", { length: 10 }).notNull(),
     country: varchar("country", { length: 10 }).notNull(),
     notes: text("notes"),
@@ -42,8 +42,8 @@ export const userPermissions = pgTable("user_permissions", {
     id: serial("id").primaryKey(),
     kindeUserId: varchar("kinde_user_id", { length: 255 }).notNull().unique(),
     email: varchar("email", { length: 255 }).notNull(),
-    role: varchar("role", { length: 50 }).notNull().default("Regular User"), // Manager, Regular User, etc.
-    permissions: text("permissions"), // JSON string of specific permissions
+    role: varchar("role", { length: 50 }).notNull().default("Regular User"),
+    permissions: text("permissions"),
     isActive: boolean("is_active").notNull().default(true),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
