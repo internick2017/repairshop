@@ -1,9 +1,7 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, User, FileText } from "lucide-react";
+import { Calendar, User, FileText, Wrench } from "lucide-react";
 import Link from "next/link";
 import { SearchTicket } from "@/types";
 
@@ -12,15 +10,7 @@ interface SearchResultsProps {
   className?: string;
 }
 
-const getStatusColor = (completed: boolean) => {
-  return completed 
-    ? "bg-green-100 text-green-800" 
-    : "bg-yellow-100 text-yellow-800";
-};
 
-const getStatusText = (completed: boolean) => {
-  return completed ? "Completed" : "Pending";
-};
 
 export function SearchResults({ results, className }: SearchResultsProps) {
   if (results.length === 0) {
@@ -29,58 +19,68 @@ export function SearchResults({ results, className }: SearchResultsProps) {
 
   return (
     <div className={className}>
-      <h3 className="text-lg font-semibold mb-4">
-        Search Results ({results.length})
-      </h3>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {results.map((ticket) => (
-          <Card key={ticket.id} className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <FileText className="h-5 w-5" />
-                {ticket.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground line-clamp-2">
-                {ticket.description}
-              </p>
-              
-                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                 <User className="h-4 w-4" />
-                 <span>{ticket.customerFirstName} {ticket.customerLastName}</span>
-               </div>
-              
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Calendar className="h-4 w-4" />
-                <span>Created {new Date(ticket.createdAt).toLocaleDateString()}</span>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Search Results ({results.length})
+          </h2>
+        </div>
+        
+        <div className="divide-y divide-gray-200 dark:divide-gray-700">
+          {results.map((ticket) => (
+            <div key={ticket.id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      #{ticket.id} - {ticket.title}
+                    </h3>
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      ticket.completed 
+                        ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
+                        : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
+                    }`}>
+                      {ticket.completed ? "Completed" : "Pending"}
+                    </span>
+                  </div>
+                  
+                  <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                    {ticket.description}
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-400">
+                      <User className="w-4 h-4" />
+                      <span>
+                        {ticket.customerFirstName} {ticket.customerLastName}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-400">
+                      <Wrench className="w-4 h-4" />
+                      <span>{ticket.tech}</span>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-400">
+                      <Calendar className="w-4 h-4" />
+                      <span>
+                        {new Date(ticket.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="ml-6">
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/tickets/form?ticketId=${ticket.id}`}>
+                      Edit
+                    </Link>
+                  </Button>
+                </div>
               </div>
-              
-                             <div className="flex items-center gap-2">
-                 <Badge 
-                   className={getStatusColor(ticket.completed)}
-                   variant="secondary"
-                 >
-                   {getStatusText(ticket.completed)}
-                 </Badge>
-                 <Badge 
-                   className="bg-blue-100 text-blue-800"
-                   variant="secondary"
-                 >
-                   {ticket.tech}
-                 </Badge>
-               </div>
-              
-              <div className="flex items-center justify-between pt-2">
-                <Button asChild size="sm">
-                  <Link href={`/tickets/${ticket.id}`}>
-                    View Details
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

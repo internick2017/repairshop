@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { tickets, customers } from "@/db/schema";
-import { ilike, or, sql } from "drizzle-orm";
+import { ilike, or, eq } from "drizzle-orm";
 
 export async function searchTickets(query: string) {
   if (!query.trim()) {
@@ -10,7 +10,8 @@ export async function searchTickets(query: string) {
   const searchTerm = `%${query.trim()}%`;
 
   try {
-    const results = await db
+    // First, get all tickets with their customer data
+    const allTickets = await db
       .select({
         id: tickets.id,
         title: tickets.title,
@@ -26,20 +27,22 @@ export async function searchTickets(query: string) {
         customerPhone: customers.phone,
       })
       .from(tickets)
-      .leftJoin(customers, tickets.customerId === customers.id)
-      .where(
-        or(
-          ilike(tickets.title, searchTerm),
-          ilike(tickets.description, searchTerm),
-          ilike(customers.firstName, searchTerm),
-          ilike(customers.lastName, searchTerm),
-          sql`CONCAT(${customers.firstName}, ' ', ${customers.lastName}) ILIKE ${searchTerm}`,
-          ilike(customers.email, searchTerm)
-        )
-      )
+      .leftJoin(customers, eq(tickets.customerId, customers.id))
       .orderBy(tickets.createdAt);
 
-    return results;
+    // Then filter the results in JavaScript
+    const filteredResults = allTickets.filter(ticket => {
+      const searchLower = query.toLowerCase();
+      return (
+        ticket.title.toLowerCase().includes(searchLower) ||
+        ticket.description.toLowerCase().includes(searchLower) ||
+        (ticket.customerFirstName && ticket.customerFirstName.toLowerCase().includes(searchLower)) ||
+        (ticket.customerLastName && ticket.customerLastName.toLowerCase().includes(searchLower)) ||
+        (ticket.customerEmail && ticket.customerEmail.toLowerCase().includes(searchLower))
+      );
+    });
+
+    return filteredResults;
   } catch (error) {
     console.error("Error searching tickets:", error);
     throw new Error("Failed to search tickets");
