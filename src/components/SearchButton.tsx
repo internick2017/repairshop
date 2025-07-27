@@ -3,6 +3,7 @@
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Loader2, Search } from "lucide-react";
+import { memo } from "react";
 
 interface SearchButtonProps {
   children?: React.ReactNode;
@@ -11,7 +12,7 @@ interface SearchButtonProps {
   size?: "default" | "sm" | "lg" | "icon";
 }
 
-export function SearchButton({ 
+export const SearchButton = memo(function SearchButton({ 
   children = "Search", 
   className,
   variant = "default",
@@ -26,18 +27,20 @@ export function SearchButton({
       className={className}
       variant={variant}
       size={size}
+      aria-busy={pending}
+      aria-label={pending ? "Searching, please wait" : undefined}
     >
       {pending ? (
         <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Searching...
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+          <span aria-live="polite" aria-atomic="true">Searching...</span>
         </>
       ) : (
         <>
-          <Search className="mr-2 h-4 w-4" />
+          <Search className="mr-2 h-4 w-4" aria-hidden="true" />
           {children}
         </>
       )}
     </Button>
   );
-} 
+}); 

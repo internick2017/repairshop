@@ -1,17 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { SearchButton } from "@/components/SearchButton";
-import { Search } from "lucide-react";
+import { SearchForm as GenericSearchForm } from "@/components/forms";
 import { searchTicketsAction } from "@/lib/actions/search-actions";
-import { useSafeAction } from "@/lib/hooks/use-safe-action";
-import { toast } from "sonner";
+import { SearchTicket } from "@/types";
+import { Search } from "lucide-react";
 
 interface SearchFormProps {
-  onSearchResults: (results: any[]) => void;
+  onSearchResults: (results: SearchTicket[]) => void;
   placeholder?: string;
   className?: string;
 }
@@ -21,57 +16,16 @@ export function SearchForm({
   placeholder = "Search tickets by title, description, or customer...",
   className 
 }: SearchFormProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const { execute, isLoading } = useSafeAction(searchTicketsAction, {
-    onSuccess: (data: any) => {
-      onSearchResults(data.data || []);
-      if (data.data?.length === 0) {
-        toast.info("No tickets found matching your search.");
-      }
-    },
-    onError: (error) => {
-      toast.error(error || "Failed to search tickets");
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      execute({ query: searchQuery });
-    }
-  };
-
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Search className="h-5 w-5" />
-          Search Tickets
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="search" className="sr-only">
-              Search tickets
-            </Label>
-            <Input
-              id="search"
-              type="text"
-              placeholder={placeholder}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full"
-            />
-          </div>
-          <SearchButton 
-            className="w-full sm:w-auto"
-          >
-            Search Tickets
-          </SearchButton>
-        </form>
-      </CardContent>
-    </Card>
+    <GenericSearchForm<SearchTicket>
+      onSearchResults={onSearchResults}
+      searchAction={searchTicketsAction}
+      placeholder={placeholder}
+      title="Search Tickets"
+      className={className}
+      emptyMessage="No tickets found matching your search."
+      errorMessage="Failed to search tickets"
+      icon={<Search className="h-5 w-5" />}
+    />
   );
 } 

@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { tickets, customers } from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { sanitizeFormData } from "@/lib/sanitization";
 
 // Schema for updating tickets (all fields optional except id)
 const ticketUpdateSchema = ticketInsertSchema.partial().extend({
@@ -63,11 +64,14 @@ export const createTicket = action
       };
     }
 
-     const { id: _id, ...insertData } = parsedInput;
+    const { id: _, ...insertData } = parsedInput;
+    
+    // Sanitize input data before inserting
+    const sanitizedData = sanitizeFormData(insertData);
     
     const [newTicket] = await db
       .insert(tickets)
-      .values(insertData)
+      .values(sanitizedData)
       .returning();
 
     revalidatePath("/tickets");
@@ -89,10 +93,13 @@ export const updateTicket = action
   try {
     const { id, ...updateData } = parsedInput;
     
+    // Sanitize update data
+    const sanitizedData = sanitizeFormData(updateData);
+    
     const [updatedTicket] = await db
       .update(tickets)
       .set({
-        ...updateData,
+        ...sanitizedData,
         updatedAt: new Date(),
       })
       .where(eq(tickets.id, id))

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DataTableViewOptions } from "./data-table-view-options"
 
-import { statuses } from "@/lib/data"
+// import { statuses } from "@/lib/data"
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
@@ -18,8 +18,6 @@ interface DataTableToolbarProps<TData> {
 
 export function DataTableToolbar<TData>({
   table,
-  searchKey,
-  searchKeys,
   searchPlaceholder = "Search...",
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0

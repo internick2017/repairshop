@@ -70,7 +70,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
             } else {
                 toast.error(data.error || "Failed to fetch users");
             }
-        } catch (_error) {
+        } catch {
             toast.error("Failed to fetch users");
         } finally {
             setLoading(false);
@@ -147,7 +147,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                     toast.error(result.error || "Failed to create user");
                 }
             }
-        } catch (_error) {
+        } catch {
             toast.error("An error occurred while saving the user");
         } finally {
             setActionLoading(false);
@@ -173,7 +173,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
             } else {
                 toast.error(result.error || "Failed to delete user");
             }
-        } catch (_error) {
+        } catch {
             toast.error("An error occurred while deleting the user");
         } finally {
             setActionLoading(false);
@@ -216,7 +216,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
             } else {
                 toast.error(result.error || "Failed to update user status");
             }
-        } catch (_error) {
+        } catch {
             toast.error("An error occurred while updating user status");
         } finally {
             setActionLoading(false);

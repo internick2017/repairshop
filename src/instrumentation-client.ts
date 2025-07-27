@@ -10,19 +10,64 @@ Sentry.init({
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: process.env.NODE_ENV === 'development',
 
+  // Performance Monitoring
+  tracesSampleRate: process.env.NODE_ENV === 'development' ? 1.0 : 0.1,
+
+  // Session Replay
   replaysOnErrorSampleRate: 1.0,
+  replaysSessionSampleRate: process.env.NODE_ENV === 'development' ? 0.5 : 0.1,
 
-  // This sets the sample rate to be 10%. You may want this to be 100% while in development and sample at a lower rate in production.
-  replaysSessionSampleRate: 0.1,
-
-  // You can remove this option if you're not planning to use the Sentry session replay feature:
+  // Environment and release tracking
+  environment: process.env.NODE_ENV,
+  
+  // Enhanced integrations
   integrations: [
     Sentry.replayIntegration({
-      // Additional Replay configuration goes in here, for example:
-      maskAllText: true,
+      maskAllText: false, // Allow text capture for better debugging (be mindful of PII)
       blockAllMedia: true,
+      maskAllInputs: true, // Mask form inputs to protect sensitive data
+    }),
+    Sentry.browserTracingIntegration({
+      // Enable automatic instrumentation of user interactions
+      enableInp: true,
     }),
   ],
+
+  // Enhanced error filtering
+  beforeSend(event, hint) {
+    // Filter out non-actionable errors
+    if (event.exception) {
+      const error = hint.originalException;
+      
+      // Filter out ResizeObserver loop limit exceeded errors (common, non-actionable)
+      if (error && typeof error === 'object' && 'message' in error) {
+        const message = (error as Error).message;
+        if (message?.includes('ResizeObserver loop limit exceeded')) {
+          return null;
+        }
+        
+        // Filter out network errors that are likely user connectivity issues
+        if (message?.includes('NetworkError') || message?.includes('fetch')) {
+          // Only capture if it's a server error (5xx)
+          if (!message.includes('5')) {
+            return null;
+          }
+        }
+      }
+    }
+    
+    return event;
+  },
+
+  // Enhanced breadcrumb filtering
+  beforeBreadcrumb(breadcrumb) {
+    // Filter out noisy breadcrumbs
+    if (breadcrumb.category === 'console' && breadcrumb.level === 'log') {
+      return null;
+    }
+    
+    return breadcrumb;
+  },
 });
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

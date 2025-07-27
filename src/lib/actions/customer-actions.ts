@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { customers } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { sanitizeFormData } from "@/lib/sanitization";
 
 // Schema for updating customers (all fields optional except id)
 const customerUpdateSchema = customerInsertSchema.partial().extend({
@@ -33,9 +34,12 @@ export const createCustomer = action
   .inputSchema(customerInsertSchema)
   .action(async ({ parsedInput }) => {
   try {
+    // Sanitize input data before inserting
+    const sanitizedData = sanitizeFormData(parsedInput);
+    
     const [newCustomer] = await db
       .insert(customers)
-      .values(parsedInput)
+      .values(sanitizedData)
       .returning();
 
     revalidatePath("/customers");
@@ -61,10 +65,13 @@ export const updateCustomer = action
   try {
     const { id, ...updateData } = parsedInput;
     
+    // Sanitize update data
+    const sanitizedData = sanitizeFormData(updateData);
+    
     const [updatedCustomer] = await db
       .update(customers)
       .set({
-        ...updateData,
+        ...sanitizedData,
         updatedAt: new Date(),
       })
       .where(eq(customers.id, id))

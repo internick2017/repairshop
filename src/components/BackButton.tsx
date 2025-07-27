@@ -35,10 +35,12 @@ export function BackButton({
                     text-gray-600 hover:text-gray-800 
                     dark:text-gray-300 dark:hover:text-gray-100 
                     transition-colors duration-200 
+                    focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md px-2 py-1
                     ${className}
                 `}
+                aria-label={`${label} to previous page`}
             >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-5 h-5" aria-hidden="true" />
                 <span className="text-sm font-medium">{label}</span>
             </Link>
         );
@@ -53,10 +55,12 @@ export function BackButton({
                 text-gray-600 hover:text-gray-800 
                 dark:text-gray-300 dark:hover:text-gray-100 
                 transition-colors duration-200 
+                focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md px-2 py-1
                 ${className}
             `}
+            aria-label={`${label} to previous page`}
         >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-5 h-5" aria-hidden="true" />
             <span className="text-sm font-medium">{label}</span>
         </button>
     );

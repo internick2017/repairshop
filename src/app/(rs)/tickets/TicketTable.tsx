@@ -2,22 +2,7 @@
 
 import { DataTable } from "@/components/ui/data-table";
 import { columns } from "./columns";
-
-interface Ticket {
-  id: number;
-  title: string;
-  description: string;
-  completed: boolean;
-  tech: string;
-  createdAt: Date;
-  updatedAt: Date;
-  customerId: number;
-  customer?: {
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-}
+import { Ticket } from "@/types";
 
 interface TicketTableProps {
   tickets: Ticket[];

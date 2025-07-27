@@ -5,15 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Mail, Phone, User } from "lucide-react";
 import Link from "next/link";
-
-interface Customer {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  createdAt: Date;
-}
+import { Customer } from "@/types";
 
 interface SearchResultsProps {
   results: Customer[];

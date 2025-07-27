@@ -3,12 +3,11 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form} from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { InputWithLabel, TextareaWithLabel, SelectWithLabel, CheckboxWithLabel } from "@/components/inputs";
+import { InputWithLabel, TextareaWithLabel } from "@/components/inputs";
+import { FormWrapper, FormSection, FormGrid, FormActions, PermissionField, CountryStateFields } from "@/components/forms";
 import { customerInsertSchema, type InsertCustomerSchema, type SelectCustomerSchema } from "@/lib/zod-schemas/customer";
 import { z } from "zod";
-import React, { useMemo, useState } from "react";
-import { allCountries } from "country-region-data";
+import React from "react";
 import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 import { createCustomer, updateCustomer } from "@/lib/actions";
 import { useSafeAction } from "@/lib/hooks/use-safe-action";
@@ -68,25 +67,6 @@ export function CustomerForm({ customer }: CustomerFormProps) {
         active: true,
     };
 
-    // Dynamic country/state logic
-    const countryOptions = useMemo(
-        () => (allCountries as Array<[string, string, Array<[string, string]>]>).map(c => ({
-            value: c[1],   // country short code
-            label: c[0],   // country name
-        })),
-        []
-    );
-
-    const [selectedCountry, setSelectedCountry] = useState(defaultValues.country || countryOptions[0]?.value || "");
-    const regionOptions = useMemo(() => {
-        const country = (allCountries as Array<[string, string, Array<[string, string]>]>).find(c => c[1] === selectedCountry);
-        return country && country[2].length > 0
-            ? country[2].map((r: [string, string]) => ({
-                value: r[1] || r[0],
-                label: r[0],
-            }))
-            : [];
-    }, [selectedCountry]);
 
     const form = useForm<z.infer<typeof customerInsertSchema>>({
         mode: "onBlur",
@@ -94,12 +74,6 @@ export function CustomerForm({ customer }: CustomerFormProps) {
         defaultValues,
     });
 
-    // Keep react-hook-form in sync with dynamic country
-    React.useEffect(() => {
-        form.setValue("country", selectedCountry);
-        // If the selected country changes, clear the state field
-        form.setValue("state", "");
-    }, [selectedCountry, form]);
 
     async function submitForm(data: z.infer<typeof customerInsertSchema>) {
         // If user is not a manager, preserve the original active status
@@ -116,37 +90,23 @@ export function CustomerForm({ customer }: CustomerFormProps) {
         }
     }
 
+    const handleReset = () => {
+        form.reset();
+    };
+
     return (
-        <div className="max-w-4xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
-            {/* Header */}
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800">
-                <div className="flex items-center justify-between">
-                    {customer && customer.id !== 0 ? (
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                            Edit Customer: {customer?.id}
-                        </h2>
-                    ) : (
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                            New Customer 
-                        </h2>
-                    )}
-                </div>
-            </div>
-            
+        <FormWrapper
+            title={customer && customer.id !== 0 ? `Edit Customer: ${customer.id}` : "New Customer"}
+            subtitle={customer ? "Update customer information" : "Create a new customer record"}
+        >
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(submitForm)} className="p-6 space-y-8">
+                <form onSubmit={form.handleSubmit(submitForm)} className="space-y-8">
                     {/* Personal Information Section */}
-                    <div className="space-y-6">
-                        <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                Personal Information
-                            </h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                Basic customer details
-                            </p>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormSection
+                        title="Personal Information"
+                        description="Basic customer details"
+                    >
+                        <FormGrid columns={2}>
                             <InputWithLabel<InsertCustomerSchema>
                                 fieldTitle="First Name"
                                 nameInSchema="firstName"
@@ -161,21 +121,15 @@ export function CustomerForm({ customer }: CustomerFormProps) {
                                 placeholder="Enter last name"
                                 className="space-y-3"
                             />
-                        </div>
-                    </div>
+                        </FormGrid>
+                    </FormSection>
 
                     {/* Contact Information Section */}
-                    <div className="space-y-6">
-                        <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                Contact Information
-                            </h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                How to reach the customer
-                            </p>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormSection
+                        title="Contact Information"
+                        description="How to reach the customer"
+                    >
+                        <FormGrid columns={2}>
                             <InputWithLabel<InsertCustomerSchema>
                                 fieldTitle="Email Address"
                                 nameInSchema="email"
@@ -192,45 +146,24 @@ export function CustomerForm({ customer }: CustomerFormProps) {
                                 placeholder="+1 (555) 123-4567"
                                 className="space-y-3"
                             />
-                        </div>
-                    </div>
+                        </FormGrid>
+                    </FormSection>
 
                     {/* Address Information Section */}
-                    <div className="space-y-6">
-                        <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                Address Information
-                            </h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                Customer&apos;s physical address
-                            </p>
-                        </div>
-                        
+                    <FormSection
+                        title="Address Information"
+                        description="Customer's physical address"
+                    >
                         <div className="space-y-6">
                             {/* Country and State/Region */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <SelectWithLabel<InsertCustomerSchema>
-                                    fieldTitle="Country"
-                                    nameInSchema="country"
-                                    required={true}
-                                    placeholder="Select country"
-                                    options={countryOptions}
-                                    onValueChange={val => setSelectedCountry(val)}
-                                    className="space-y-3"
-                                />
-                                <SelectWithLabel<InsertCustomerSchema>
-                                    fieldTitle="State/Region"
-                                    nameInSchema="state"
-                                    required={true}
-                                    placeholder={regionOptions.length ? "Select state/region" : "No regions available"}
-                                    options={regionOptions}
-                                    disabled={regionOptions.length === 0}
-                                    className="space-y-3"
-                                />
-                            </div>
+                            <CountryStateFields<InsertCustomerSchema>
+                                countryFieldName="country"
+                                stateFieldName="state"
+                                defaultCountry={defaultValues.country}
+                            />
                             
                             {/* City and ZIP/Postal Code */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <FormGrid columns={2}>
                                 <InputWithLabel<InsertCustomerSchema>
                                     fieldTitle="City"
                                     nameInSchema="city"
@@ -246,7 +179,7 @@ export function CustomerForm({ customer }: CustomerFormProps) {
                                     maxLength={10}
                                     className="space-y-3"
                                 />
-                            </div>
+                            </FormGrid>
                             
                             {/* Street Address */}
                             <InputWithLabel<InsertCustomerSchema>
@@ -264,82 +197,22 @@ export function CustomerForm({ customer }: CustomerFormProps) {
                                 className="space-y-3"
                             />
                         </div>
-                    </div>
+                    </FormSection>
 
                     {/* Additional Information Section */}
-                    <div className="space-y-6">
-                        <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                Additional Information
-                            </h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                Any additional notes or special requirements
-                            </p>
-                        </div>
-                        
+                    <FormSection
+                        title="Additional Information"
+                        description="Any additional notes or special requirements"
+                    >
                         <div className="space-y-6">
-                            {isLoading ? (
-                                <div className="space-y-3">
-                                    <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                                        <div className="flex items-center space-x-2">
-                                            <div className="w-4 h-4 rounded border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center">
-                                                <div className="w-2 h-2 rounded-sm bg-gray-400 animate-pulse"></div>
-                                            </div>
-                                            <div>
-                                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                    Active Customer
-                                                </label>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                    Checking permissions...
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="ml-auto">
-                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 animate-pulse">
-                                                Loading...
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : isManager ? (
-                                <div className="space-y-3">
-                                    <CheckboxWithLabel<InsertCustomerSchema>
-                                        fieldTitle="Active Customer"
-                                        nameInSchema="active"
-                                        required={false}
-                                        description="Mark this customer as active (uncheck to deactivate)"
-                                        className="space-y-3"
-                                    />
-                                    <div className="flex justify-end">
-                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200">
-                                            Manager Permission
-                                        </span>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                                        <div className="flex items-center space-x-2">
-                                            <div className="w-4 h-4 rounded border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center">
-                                                <div className={`w-2 h-2 rounded-sm ${customer?.active ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                                            </div>
-                                            <div>
-                                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                                    Active Customer
-                                                </label>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                    {customer?.active ? 'Active' : 'Inactive'} - Only managers can change this status
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div className="ml-auto">
-                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200">
-                                                Manager Only
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+                            <PermissionField<InsertCustomerSchema>
+                                fieldTitle="Active Customer"
+                                nameInSchema="active"
+                                description="Mark this customer as active (uncheck to deactivate)"
+                                isLoading={isLoading}
+                                hasPermission={isManager}
+                                currentValue={customer?.active}
+                            />
                             
                             <TextareaWithLabel<InsertCustomerSchema>
                                 fieldTitle="Notes"
@@ -350,39 +223,17 @@ export function CustomerForm({ customer }: CustomerFormProps) {
                                 className="space-y-3"
                             />
                         </div>
-                    </div>
+                    </FormSection>
 
                     {/* Form Actions */}
-                    <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200 dark:border-gray-800">
-                        <Button 
-                            type="submit" 
-                            disabled={isCreating || isUpdating}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isCreating || isUpdating ? (
-                                <span className="flex items-center space-x-2">
-                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    <span>{customer ? "Updating..." : "Creating..."}</span>
-                                </span>
-                            ) : (
-                                customer ? "Update Customer" : "Create Customer"
-                            )}
-                        </Button>
-                        <Button 
-                            type="button" 
-                            variant="outline" 
-                            disabled={isCreating || isUpdating}
-                            className="flex-1 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            onClick={() => {
-                                form.reset();
-                                setSelectedCountry(defaultValues.country || countryOptions[0]?.value || "");
-                            }}
-                        >
-                            Reset Form
-                        </Button>
-                    </div>
+                    <FormActions
+                        submitText={customer ? "Update Customer" : "Create Customer"}
+                        submitLoadingText={customer ? "Updating..." : "Creating..."}
+                        isSubmitting={isCreating || isUpdating}
+                        onReset={handleReset}
+                    />
                 </form>
             </Form>
-        </div>
+        </FormWrapper>
     );
 }

@@ -3,26 +3,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, User, FileText, AlertCircle } from "lucide-react";
+import { Calendar, User, FileText } from "lucide-react";
 import Link from "next/link";
-
-interface Ticket {
-  id: number;
-  title: string;
-  description: string;
-  completed: boolean;
-  tech: string;
-  createdAt: Date;
-  updatedAt: Date;
-  customerId: number;
-  customerFirstName: string;
-  customerLastName: string;
-  customerEmail: string;
-  customerPhone: string;
-}
+import { SearchTicket } from "@/types";
 
 interface SearchResultsProps {
-  results: Ticket[];
+  results: SearchTicket[];
   className?: string;
 }
 

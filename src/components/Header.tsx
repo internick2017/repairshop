@@ -1,6 +1,6 @@
 'use client'
 
-import { HomeIcon, File, User, Users, Moon, Sun, Bug, LogOut } from "lucide-react";
+import { File, User, Users, Moon, Sun, Bug, LogOut } from "lucide-react";
 import Link from "next/link";
 import { NavButton } from "./NavButton";
 import { useTheme } from "next-themes";
@@ -25,11 +25,16 @@ export function Header() {
     const isManager = !isLoading && getPermission("manager")?.isGranted;
 
     return (
-        <header className="animate-slide bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b sticky top-0 z-50 
+        <header 
+            role="banner"
+            className="animate-slide bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b sticky top-0 z-50 
             transition-all duration-300 ease-in-out 
             shadow-sm
             group">
-            <div className="flex items-center justify-between w-full px-6 py-3">
+            <nav 
+                role="navigation" 
+                aria-label="Main navigation"
+                className="flex items-center justify-between w-full px-6 py-3">
                 <div className="flex items-center gap-2">
                     <Link
                         href="/tickets"
@@ -51,6 +56,8 @@ export function Header() {
                         size="icon"
                         onClick={toggleTheme}
                         className="hover:bg-accent hover:text-accent-foreground"
+                        aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                        aria-pressed={theme === 'dark'}
                     >
                         {!mounted ? (
                             // Show a neutral icon during SSR to prevent hydration mismatch
@@ -60,7 +67,9 @@ export function Header() {
                         ) : (
                             <Moon className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
                         )}
-                        <span className="sr-only">Toggle theme</span>
+                        <span className="sr-only">
+                            {theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                        </span>
                     </Button>
                     <div className="flex items-center gap-1 border-l border-r border-border px-4 mx-4 bg-muted/30 rounded-lg">
                         <NavButton Icon={File} href="/tickets" label="Tickets" />
@@ -73,13 +82,19 @@ export function Header() {
                         <NavButton Icon={Bug} href="/sentry-example-page" label="Sentry Test" />
                     )}
 
-                    <Button variant="ghost" size="icon" asChild>
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        asChild
+                        aria-label="Log out"
+                    >
                         <LogoutLink>
                             <LogOut className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all" />
+                            <span className="sr-only">Log out</span>
                         </LogoutLink>
                     </Button>
                 </div>
-            </div>
+            </nav>
         </header>
     );
 }

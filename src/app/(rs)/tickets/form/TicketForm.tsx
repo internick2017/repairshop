@@ -12,15 +12,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createTicket, updateTicket } from "@/lib/actions";
 import { useSafeAction } from "@/lib/hooks/use-safe-action";
-
-type User = {
-    id: string;
-    email: string;
-    firstName?: string;
-    lastName?: string;
-    fullName: string;
-    isActive: boolean;
-};
+import { User } from "@/types";
 
 type TicketFormProps = {
     customer: SelectCustomerSchema;
@@ -110,7 +102,7 @@ export function TicketForm({ customer, ticket, users, isManager, currentUser, ca
     async function submitForm(data: z.infer<typeof ticketInsertSchema>) {
         if (ticket && ticket.id !== 0) {
             // Update existing ticket - remove the form id and use the actual ticket id
-            const { id: _formId, ...updateData } = data;
+            const { id: _, ...updateData } = data;
             await executeUpdate({ id: ticket.id, ...updateData });
         } else {
             // Create new ticket - pass the data as-is since the action expects the full schema

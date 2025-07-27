@@ -2,6 +2,9 @@ import { getCustomer } from "@/lib/queries/getCustomer";
 import { BackButton } from "@/components/BackButton";
 import * as Sentry from "@sentry/nextjs";
 import { CustomerForm } from "./CustomerForm";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Suspense } from "react";
+import { FormSkeleton } from "@/components/FormSkeleton";
 
 interface CustomerFormPageProps {
     searchParams: Promise<{
@@ -20,7 +23,11 @@ export default async function CustomerFormPage({ searchParams }: CustomerFormPag
                     <div className="flex items-center mb-6 space-x-4">
                         <BackButton href="/customers" label="Back to Customers" />
                     </div>
-                    <CustomerForm />
+                    <ErrorBoundary>
+                        <Suspense fallback={<FormSkeleton />}>
+                            <CustomerForm />
+                        </Suspense>
+                    </ErrorBoundary>
                 </div>
             );
         }
@@ -41,7 +48,11 @@ export default async function CustomerFormPage({ searchParams }: CustomerFormPag
                 <div className="flex items-center mb-6 space-x-4">
                     <BackButton href="/customers" label="Back to Customers" />
                 </div>
-                <CustomerForm customer={customer} />
+                <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                        <CustomerForm customer={customer} />
+                    </Suspense>
+                </ErrorBoundary>
             </div>
         );
     } catch (error) {

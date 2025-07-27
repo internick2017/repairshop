@@ -38,7 +38,7 @@ export function SafeActionDemo() {
   // Safe Actions hooks
   const { execute: executeCreate, isLoading: isCreating, error: createError } = useSafeAction(createCustomer, {
     onSuccess: (result) => {
-      const data = (result as any).data || result;
+      const data = result.data || result;
       setCustomers(prev => [...prev, {
         id: data.id,
         firstName: data.firstName,
@@ -56,7 +56,7 @@ export function SafeActionDemo() {
 
   const { execute: executeDelete, isLoading: isDeleting } = useSafeAction(deleteCustomer, {
     onSuccess: (result) => {
-      const data = (result as any).data || result;
+      const data = result.data || result;
       setCustomers(prev => prev.filter(c => c.id !== data.id));
       console.log("Customer deleted successfully:", data);
     },
@@ -64,7 +64,7 @@ export function SafeActionDemo() {
 
   const { execute: executeToggle, isLoading: isToggling } = useSafeAction(toggleCustomerStatus, {
     onSuccess: (result) => {
-      const data = (result as any).data || result;
+      const data = result.data || result;
       setCustomers(prev => prev.map(c => c.id === data.id ? {
         id: data.id,
         firstName: data.firstName,
@@ -80,7 +80,7 @@ export function SafeActionDemo() {
   const { execute: executeGetAll, isLoading: isGettingAll } = useSafeAction(getAllCustomers, {
     onSuccess: (data) => {
       // Transform the data to match the expected state type
-      const transformedData = data.map((customer: any) => ({
+      const transformedData = data.map((customer) => ({
         id: customer.id,
         firstName: customer.firstName,
         lastName: customer.lastName,

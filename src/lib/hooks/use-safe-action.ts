@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
+import { captureException, addBreadcrumb } from "@/lib/sentry-utils";
 
 interface UseSafeActionOptions<TData, TError> {
   onSuccess?: (data: TData) => void;
@@ -24,14 +25,34 @@ export function useSafeAction<TInput, TData, TError = string>(
       setError(null);
 
       try {
+        // Add breadcrumb for action execution
+        addBreadcrumb({
+          message: `Executing safe action`,
+          category: 'action',
+          data: { action: action.name },
+        });
+
         const result = await action(input);
 
         // Handle Safe Actions response structure
         if (result?.serverError) {
           const errorMessage = (typeof result.serverError === 'string' 
             ? result.serverError 
-            : (result.serverError as any)?.serverError || 'An error occurred') as TError;
+            : (result.serverError as Record<string, unknown>)?.serverError || 'An error occurred') as TError;
           setError(errorMessage);
+          
+          // Log to Sentry
+          captureException(new Error(String(errorMessage)), {
+            tags: {
+              action: 'safe-action',
+              type: 'server-error',
+            },
+            extra: {
+              input,
+              serverError: result.serverError,
+            },
+            level: 'warning',
+          });
           
           // Show error toast if enabled
           if (options?.showToast !== false) {

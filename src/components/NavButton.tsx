@@ -2,6 +2,7 @@ import { LucideIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { memo } from "react";
 
 
 type NavButtonProps = {
@@ -12,7 +13,7 @@ type NavButtonProps = {
 
 
 
-export function NavButton({ Icon, href, label }: NavButtonProps) {
+export const NavButton = memo(function NavButton({ Icon, href, label }: NavButtonProps) {
     const pathname = usePathname();
     const isActive = href && pathname === href;
 
@@ -21,6 +22,7 @@ export function NavButton({ Icon, href, label }: NavButtonProps) {
             variant={isActive ? "default" : "ghost"}
             size="icon" 
             aria-label={label} 
+            aria-current={isActive ? "page" : undefined}
             title={label} 
             asChild 
             className={`rounded-full group 
@@ -31,6 +33,9 @@ export function NavButton({ Icon, href, label }: NavButtonProps) {
                 hover:rotate-6 
                 focus:ring-2 
                 focus:ring-primary/50 
+                focus:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-offset-2
                 active:scale-95
                 ${isActive ? 'bg-primary text-primary-foreground shadow-md' : ''}`}
         >
@@ -45,4 +50,4 @@ export function NavButton({ Icon, href, label }: NavButtonProps) {
            )}
         </Button>
     )
-}
+});

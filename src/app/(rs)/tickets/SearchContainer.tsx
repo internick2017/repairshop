@@ -3,27 +3,17 @@
 import { useState } from "react";
 import { SearchForm } from "./SearchForm";
 import { SearchResults } from "./SearchResults";
+import { SearchTicket } from "@/types";
 
-interface Ticket {
-  id: number;
-  title: string;
-  description: string;
-  completed: boolean;
-  tech: string;
-  createdAt: Date;
-  updatedAt: Date;
-  customerId: number;
-  customerFirstName: string;
-  customerLastName: string;
-  customerEmail: string;
-  customerPhone: string;
+interface SearchContainerProps {
+  className?: string;
 }
 
-export function SearchContainer() {
-  const [searchResults, setSearchResults] = useState<Ticket[]>([]);
+export function SearchContainer({ className }: SearchContainerProps = {}) {
+  const [searchResults, setSearchResults] = useState<SearchTicket[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  const handleSearchResults = (results: Ticket[]) => {
+  const handleSearchResults = (results: SearchTicket[]) => {
     setSearchResults(results);
     setIsSearching(true);
   };
@@ -34,7 +24,7 @@ export function SearchContainer() {
   };
 
   return (
-    <div className="mb-8">
+    <div className={className}>
       <SearchForm 
         onSearchResults={handleSearchResults}
         className="mb-6"

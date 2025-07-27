@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { init as kindeInit, Users } from "@kinde/management-api-js";
-import * as Sentry from "@sentry/nextjs";
+import { captureException, addBreadcrumb } from "@/lib/sentry-utils";
 import { z } from "zod";
 
 // Type definitions for Kinde API responses
@@ -38,6 +38,14 @@ const createUserSchema = z.object({
 
 export async function GET() {
     try {
+        // Add breadcrumb for API call
+        addBreadcrumb({
+            message: 'GET /api/users - Fetching users',
+            category: 'api',
+            level: 'info',
+            data: { endpoint: '/api/users', method: 'GET' },
+        });
+
         // Check authentication and manager permission
         const { getUser, getPermission } = getKindeServerSession();
         const [user, managerPermission] = await Promise.all([
@@ -146,8 +154,19 @@ export async function GET() {
         });
 
     } catch (error) {
-        Sentry.captureException(error, {
-            tags: { component: 'UsersAPI', action: 'get_users' }
+        captureException(error, {
+            tags: { 
+                component: 'UsersAPI', 
+                action: 'get_users',
+                endpoint: '/api/users',
+                method: 'GET'
+            },
+            extra: {
+                endpoint: '/api/users',
+                method: 'GET',
+                hasUser: !!user,
+            },
+            level: 'error',
         });
 
         console.error('Error fetching users:', error);
@@ -160,6 +179,14 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
     try {
+        // Add breadcrumb for API call
+        addBreadcrumb({
+            message: 'POST /api/users - Creating new user',
+            category: 'api',
+            level: 'info',
+            data: { endpoint: '/api/users', method: 'POST' },
+        });
+
         // Check authentication and manager permission
         const { getUser, getPermission } = getKindeServerSession();
         const [user, managerPermission] = await Promise.all([
@@ -232,8 +259,19 @@ export async function POST(request: NextRequest) {
         });
 
     } catch (error) {
-        Sentry.captureException(error, {
-            tags: { component: 'UsersAPI', action: 'create_user' }
+        captureException(error, {
+            tags: { 
+                component: 'UsersAPI', 
+                action: 'create_user',
+                endpoint: '/api/users',
+                method: 'POST'
+            },
+            extra: {
+                endpoint: '/api/users',
+                method: 'POST',
+                isValidationError: error instanceof z.ZodError,
+            },
+            level: error instanceof z.ZodError ? 'warning' : 'error',
         });
 
         console.error('Error creating user:', error);

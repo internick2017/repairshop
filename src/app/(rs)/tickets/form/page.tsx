@@ -8,6 +8,9 @@ import { TicketForm } from "./TicketForm";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { redirect } from "next/navigation";
 import { Users, init as kindeInit } from "@kinde/management-api-js";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Suspense } from "react";
+import { FormSkeleton } from "@/components/FormSkeleton";
 
 type Customer = InferSelectModel<typeof customers>;
 type Ticket = InferSelectModel<typeof tickets>;
@@ -173,19 +176,23 @@ export default async function TicketFormPage({ searchParams }: TicketFormPagePro
                         label={backDestination.label}
                     />
                 </div>
-                <TicketForm
-                    customer={customer}
-                    ticket={ticket || undefined}
-                    users={users}
-                    isManager={isManager}
-                    currentUser={{
-                        id: user.id || undefined,
-                        email: user.email || '',
-                        given_name: user.given_name || undefined,
-                        family_name: user.family_name || undefined
-                    }}
-                    canEdit={canEdit}
-                />
+                <ErrorBoundary>
+                    <Suspense fallback={<FormSkeleton />}>
+                        <TicketForm
+                            customer={customer}
+                            ticket={ticket || undefined}
+                            users={users}
+                            isManager={isManager}
+                            currentUser={{
+                                id: user.id || undefined,
+                                email: user.email || '',
+                                given_name: user.given_name || undefined,
+                                family_name: user.family_name || undefined
+                            }}
+                            canEdit={canEdit}
+                        />
+                    </Suspense>
+                </ErrorBoundary>
             </div>
         );
     } catch (error) {

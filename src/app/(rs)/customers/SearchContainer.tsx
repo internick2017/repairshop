@@ -3,17 +3,13 @@
 import { useState } from "react";
 import { SearchForm } from "./SearchForm";
 import { SearchResults } from "./SearchResults";
+import { Customer } from "@/types";
 
-interface Customer {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  createdAt: Date;
+interface SearchContainerProps {
+  className?: string;
 }
 
-export function SearchContainer() {
+export function SearchContainer({ className }: SearchContainerProps = {}) {
   const [searchResults, setSearchResults] = useState<Customer[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
@@ -28,7 +24,7 @@ export function SearchContainer() {
   };
 
   return (
-    <div className="mb-8">
+    <div className={className}>
       <SearchForm 
         onSearchResults={handleSearchResults}
         className="mb-6"

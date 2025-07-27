@@ -5,20 +5,7 @@ import { columns } from "./columns";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
-
-interface Customer {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  address1: string;
-  city: string;
-  state: string;
-  active: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { Customer } from "@/types";
 
 interface CustomerTableProps {
   customers: Customer[];
@@ -26,7 +13,7 @@ interface CustomerTableProps {
   onCustomerSelect?: (customer: Customer) => void;
 }
 
-export function CustomerTable({ customers, selectMode = false, onCustomerSelect }: CustomerTableProps) {
+export function CustomerTable({ customers, selectMode = false }: CustomerTableProps) {
   return (
     <div className="space-y-4">
       {/* Actions */}
