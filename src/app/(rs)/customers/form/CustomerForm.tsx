@@ -28,12 +28,16 @@ export function CustomerForm({ customer }: CustomerFormProps) {
         onSuccess: () => {
             router.push("/customers");
         },
+        successMessage: "Customer created successfully!",
+        errorMessage: "Failed to create customer. Please try again.",
     });
 
     const { execute: executeUpdate, isLoading: isUpdating } = useSafeAction(updateCustomer, {
         onSuccess: () => {
             router.push("/customers");
         },
+        successMessage: "Customer updated successfully!",
+        errorMessage: "Failed to update customer. Please try again.",
     });
 
     const defaultValues: z.infer<typeof customerInsertSchema> = customer ? {

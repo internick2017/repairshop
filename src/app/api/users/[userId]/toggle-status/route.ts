@@ -20,7 +20,7 @@ const toggleStatusSchema = z.object({
 
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { userId: string } }
+    { params }: { params: Promise<{ userId: string }> }
 ) {
     try {
         // Check authentication and manager permission
@@ -39,8 +39,10 @@ export async function PUT(
             return NextResponse.json({ error: "Manager permission required" }, { status: 403 });
         }
 
+        const { userId } = await params;
+
         // Prevent self-suspension
-        if (user.id === params.userId) {
+        if (user.id === userId) {
             return NextResponse.json({ 
                 error: "You cannot suspend your own account" 
             }, { status: 400 });
@@ -72,7 +74,7 @@ export async function PUT(
         let updatedUser: KindeUserResponse;
         try {
             const response = await Users.updateUser({
-                id: params.userId,
+                id: userId,
                 requestBody: {
                     is_suspended: !validatedData.isActive,
                 }
@@ -84,18 +86,18 @@ export async function PUT(
             if ((updateError as { status?: number }).status === 403) {
                 // Using fallback status update response due to Management API access issue
                 // Return fallback response for development/testing
-                return NextResponse.json({ 
-                    success: true, 
-                    user: {
-                        id: params.userId,
-                        email: "user@example.com",
-                        firstName: "User",
-                        lastName: "Account",
-                        fullName: "User Account",
-                        isActive: validatedData.isActive
-                    },
-                    note: "Using fallback data - Management API access issue detected"
-                });
+                                 return NextResponse.json({ 
+                     success: true, 
+                     user: {
+                         id: userId,
+                         email: "user@example.com",
+                         firstName: "User",
+                         lastName: "Account",
+                         fullName: "User Account",
+                         isActive: validatedData.isActive
+                     },
+                     note: "Using fallback data - Management API access issue detected"
+                 });
             }
             
             throw updateError;

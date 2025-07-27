@@ -26,10 +26,10 @@ export default function NotFound() {
           Oops! The page you are looking for seems to have gone missing.
           It might have been moved or deleted.
         </p>
-        <Link href="/home" className="inline-block">
-          <Button variant="default">
-            Return to Home
-          </Button>
+                                <Link href="/tickets" className="inline-block">
+                      <Button variant="default">
+              Return to Tickets
+            </Button>
         </Link>
       </div>
     </div>

@@ -1,14 +1,17 @@
 import { useState, useCallback } from "react";
-import { ActionResponse } from "../safe-actions";
+import { toast } from "sonner";
 
 interface UseSafeActionOptions<TData, TError> {
   onSuccess?: (data: TData) => void;
   onError?: (error: TError) => void;
   onSettled?: () => void;
+  showToast?: boolean; // Option to enable/disable automatic toast notifications
+  successMessage?: string | ((data: TData) => string);
+  errorMessage?: string | ((error: TError) => string);
 }
 
 export function useSafeAction<TInput, TData, TError = string>(
-  action: (input: TInput) => Promise<ActionResponse<TData>>,
+  action: (input: TInput) => Promise<{ data?: TData; serverError?: unknown }>,
   options?: UseSafeActionOptions<TData, TError>
 ) {
   const [isLoading, setIsLoading] = useState(false);
@@ -23,17 +26,51 @@ export function useSafeAction<TInput, TData, TError = string>(
       try {
         const result = await action(input);
 
-        if (result.serverError) {
-          const errorMessage = result.serverError as TError;
+        // Handle Safe Actions response structure
+        if (result?.serverError) {
+          const errorMessage = (typeof result.serverError === 'string' 
+            ? result.serverError 
+            : (result.serverError as any)?.serverError || 'An error occurred') as TError;
           setError(errorMessage);
+          
+          // Show error toast if enabled
+          if (options?.showToast !== false) {
+            const toastMessage = options?.errorMessage 
+              ? (typeof options.errorMessage === 'function' 
+                  ? options.errorMessage(errorMessage) 
+                  : options.errorMessage)
+              : String(errorMessage);
+            toast.error(toastMessage);
+          }
+          
           options?.onError?.(errorMessage);
-        } else if (result.data) {
+        } else if (result?.data) {
           setData(result.data);
+          
+          // Show success toast if enabled
+          if (options?.showToast !== false && options?.successMessage) {
+            const toastMessage = typeof options.successMessage === 'function' 
+              ? options.successMessage(result.data) 
+              : options.successMessage;
+            toast.success(toastMessage);
+          }
+          
           options?.onSuccess?.(result.data);
         }
       } catch (err) {
         const errorMessage = (err as Error).message as TError;
         setError(errorMessage);
+        
+        // Show error toast for caught exceptions
+        if (options?.showToast !== false) {
+          const toastMessage = options?.errorMessage 
+            ? (typeof options.errorMessage === 'function' 
+                ? options.errorMessage(errorMessage) 
+                : options.errorMessage)
+            : String(errorMessage);
+          toast.error(toastMessage);
+        }
+        
         options?.onError?.(errorMessage);
       } finally {
         setIsLoading(false);

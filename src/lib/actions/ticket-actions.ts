@@ -63,7 +63,7 @@ export const createTicket = action
       };
     }
 
-     const { id, ...insertData } = parsedInput;
+     const { id: _id, ...insertData } = parsedInput;
     
     const [newTicket] = await db
       .insert(tickets)

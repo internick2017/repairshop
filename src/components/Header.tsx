@@ -25,16 +25,14 @@ export function Header() {
     const isManager = !isLoading && getPermission("manager")?.isGranted;
 
     return (
-        <header className="animate-slide bg-background border-b sticky top-0 z-50 
+        <header className="animate-slide bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b sticky top-0 z-50 
             transition-all duration-300 ease-in-out 
-            hover:shadow-md 
+            shadow-sm
             group">
-            <div className="flex items-center justify-between w-full px-4 py-2">
+            <div className="flex items-center justify-between w-full px-6 py-3">
                 <div className="flex items-center gap-2">
-                    <NavButton Icon={HomeIcon} href="/home" label="Home" />
-
                     <Link
-                        href="/"
+                        href="/tickets"
                         className="flex items-center gap-2 ml-0 group"
                         title="Home"
                     >
@@ -64,11 +62,13 @@ export function Header() {
                         )}
                         <span className="sr-only">Toggle theme</span>
                     </Button>
-                    <NavButton Icon={File} href="/tickets" label="Tickets" />
-                    <NavButton Icon={User} href="/customers" label="Customers" />
-                    {isManager && (
-                        <NavButton Icon={Users} href="/users" label="Users" />
-                    )}
+                    <div className="flex items-center gap-1 border-l border-r border-border px-4 mx-4 bg-muted/30 rounded-lg">
+                        <NavButton Icon={File} href="/tickets" label="Tickets" />
+                        <NavButton Icon={User} href="/customers" label="Customers" />
+                        {isManager && (
+                            <NavButton Icon={Users} href="/users" label="Users" />
+                        )}
+                    </div>
                     {process.env.NODE_ENV === 'development' && (
                         <NavButton Icon={Bug} href="/sentry-example-page" label="Sentry Test" />
                     )}

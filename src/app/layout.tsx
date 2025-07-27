@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
+import { Toaster } from '@/components/ui/toast'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -31,6 +32,7 @@ export default function RootLayout({
             {/* Header will be added to authenticated routes via their specific layouts */}
             {children}
           </div>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

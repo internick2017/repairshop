@@ -10,6 +10,8 @@ import { z } from "zod";
 import { SelectCustomerSchema } from "@/lib/zod-schemas/customer";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { createTicket, updateTicket } from "@/lib/actions";
+import { useSafeAction } from "@/lib/hooks/use-safe-action";
 
 type User = {
     id: string;
@@ -36,9 +38,26 @@ type TicketFormProps = {
 
 export function TicketForm({ customer, ticket, users, isManager, currentUser, canEdit }: TicketFormProps) {
     const router = useRouter();
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [submitError, setSubmitError] = useState<string | null>(null);
     const [techOptions, setTechOptions] = useState<{ value: string; label: string }[]>([]);
+
+    // Safe Actions hooks
+    const { execute: executeCreate, isLoading: isCreating } = useSafeAction(createTicket, {
+        onSuccess: () => {
+            router.push("/tickets");
+        },
+        successMessage: "Ticket created successfully!",
+        errorMessage: "Failed to create ticket. Please try again.",
+    });
+
+    const { execute: executeUpdate, isLoading: isUpdating } = useSafeAction(updateTicket, {
+        onSuccess: () => {
+            router.push("/tickets");
+        },
+        successMessage: "Ticket updated successfully!",
+        errorMessage: "Failed to update ticket. Please try again.",
+    });
+
+    const isSubmitting = isCreating || isUpdating;
 
     // Prepare tech options based on user permissions
     useEffect(() => {
@@ -89,38 +108,13 @@ export function TicketForm({ customer, ticket, users, isManager, currentUser, ca
     });
 
     async function submitForm(data: z.infer<typeof ticketInsertSchema>) {
-        setIsSubmitting(true);
-        setSubmitError(null);
-
-        try {
-            const isEditing = ticket && ticket.id !== 0;
-            const url = "/api/tickets";
-            const method = isEditing ? "PUT" : "POST";
-
-            const response = await fetch(url, {
-                method,
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(data),
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || "Failed to save ticket");
-            }
-
-            // Redirect to tickets list on success
-            router.push("/tickets");
-            router.refresh();
-
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "An error occurred";
-            setSubmitError(errorMessage);
-            console.error("Form submission error:", error);
-        } finally {
-            setIsSubmitting(false);
+        if (ticket && ticket.id !== 0) {
+            // Update existing ticket - remove the form id and use the actual ticket id
+            const { id: _formId, ...updateData } = data;
+            await executeUpdate({ id: ticket.id, ...updateData });
+        } else {
+            // Create new ticket - pass the data as-is since the action expects the full schema
+            await executeCreate(data);
         }
     }
 
@@ -130,7 +124,6 @@ export function TicketForm({ customer, ticket, users, isManager, currentUser, ca
     const handleReset = () => {
         form.reset();
         setStatusText(defaultValues.completed ? "Completed" : "Pending");
-        setSubmitError(null);
     };
 
     return (
@@ -153,11 +146,7 @@ export function TicketForm({ customer, ticket, users, isManager, currentUser, ca
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(submitForm)} className="p-6">
                     {/* Error Message */}
-                    {submitError && (
-                        <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                            <p className="text-red-700 dark:text-red-300">{submitError}</p>
-                        </div>
-                    )}
+
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         {/* Left Column - Ticket Details */}

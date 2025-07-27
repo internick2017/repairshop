@@ -37,8 +37,16 @@ export function SafeActionDemo() {
 
   // Safe Actions hooks
   const { execute: executeCreate, isLoading: isCreating, error: createError } = useSafeAction(createCustomer, {
-    onSuccess: (data) => {
-      setCustomers(prev => [...prev, data]);
+    onSuccess: (result) => {
+      const data = (result as any).data || result;
+      setCustomers(prev => [...prev, {
+        id: data.id,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        active: data.active
+      }]);
       console.log("Customer created successfully:", data);
     },
     onError: (error) => {
@@ -47,23 +55,41 @@ export function SafeActionDemo() {
   });
 
   const { execute: executeDelete, isLoading: isDeleting } = useSafeAction(deleteCustomer, {
-    onSuccess: (data) => {
+    onSuccess: (result) => {
+      const data = (result as any).data || result;
       setCustomers(prev => prev.filter(c => c.id !== data.id));
       console.log("Customer deleted successfully:", data);
     },
   });
 
   const { execute: executeToggle, isLoading: isToggling } = useSafeAction(toggleCustomerStatus, {
-    onSuccess: (data) => {
-      setCustomers(prev => prev.map(c => c.id === data.id ? data : c));
+    onSuccess: (result) => {
+      const data = (result as any).data || result;
+      setCustomers(prev => prev.map(c => c.id === data.id ? {
+        id: data.id,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        active: data.active
+      } : c));
       console.log("Customer status toggled:", data);
     },
   });
 
   const { execute: executeGetAll, isLoading: isGettingAll } = useSafeAction(getAllCustomers, {
     onSuccess: (data) => {
-      setCustomers(data);
-      console.log("All customers loaded:", data);
+      // Transform the data to match the expected state type
+      const transformedData = data.map((customer: any) => ({
+        id: customer.id,
+        firstName: customer.firstName,
+        lastName: customer.lastName,
+        email: customer.email,
+        phone: customer.phone,
+        active: customer.active
+      }));
+      setCustomers(transformedData);
+      console.log("All customers loaded:", transformedData);
     },
   });
 

@@ -24,7 +24,7 @@ const updateUserSchema = z.object({
 
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { userId: string } }
+    { params }: { params: Promise<{ userId: string }> }
 ) {
     try {
         // Check authentication and manager permission
@@ -43,6 +43,7 @@ export async function PUT(
             return NextResponse.json({ error: "Manager permission required" }, { status: 403 });
         }
 
+        const { userId } = await params;
         const body = await request.json();
         const validatedData = updateUserSchema.parse(body);
 
@@ -87,7 +88,7 @@ export async function PUT(
         let updatedUser: KindeUserResponse;
         try {
             const response = await Users.updateUser({
-                id: params.userId,
+                id: userId,
                 requestBody: updateData
             });
             
@@ -102,18 +103,18 @@ export async function PUT(
             
             if ((updateError as { status?: number }).status === 403) {
                 // Return fallback response for development/testing
-                return NextResponse.json({ 
-                    success: true, 
-                    user: {
-                        id: params.userId,
-                        email: validatedData.email || "user@example.com",
-                        firstName: validatedData.firstName || "Updated",
-                        lastName: validatedData.lastName || "User",
-                        fullName: `${validatedData.firstName || "Updated"} ${validatedData.lastName || "User"}`,
-                        isActive: validatedData.isActive !== undefined ? validatedData.isActive : true
-                    },
-                    note: "Using fallback data - Management API access issue detected"
-                });
+                                 return NextResponse.json({ 
+                     success: true, 
+                     user: {
+                         id: userId,
+                         email: validatedData.email || "user@example.com",
+                         firstName: validatedData.firstName || "Updated",
+                         lastName: validatedData.lastName || "User",
+                         fullName: `${validatedData.firstName || "Updated"} ${validatedData.lastName || "User"}`,
+                         isActive: validatedData.isActive !== undefined ? validatedData.isActive : true
+                     },
+                     note: "Using fallback data - Management API access issue detected"
+                 });
             }
             
             throw updateError;
@@ -162,7 +163,7 @@ export async function PUT(
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { userId: string } }
+    { params }: { params: Promise<{ userId: string }> }
 ) {
     try {
         // Check authentication and manager permission
@@ -181,8 +182,10 @@ export async function DELETE(
             return NextResponse.json({ error: "Manager permission required" }, { status: 403 });
         }
 
+        const { userId } = await params;
+
         // Prevent self-deletion
-        if (user.id === params.userId) {
+        if (user.id === userId) {
             return NextResponse.json({ 
                 error: "You cannot delete your own account" 
             }, { status: 400 });
@@ -209,7 +212,7 @@ export async function DELETE(
 
         // Delete user from Kinde
         // Fix: Pass the user ID as an object parameter
-        await Users.deleteUser({ id: params.userId });
+        await Users.deleteUser({ id: userId });
 
         return NextResponse.json({ 
             success: true, 

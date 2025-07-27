@@ -5,6 +5,8 @@ import { Plus, FileText, User, Calendar, Wrench, CheckCircle, Clock } from "luci
 import Link from "next/link";
 import * as Sentry from "@sentry/nextjs";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { SearchContainer } from "./SearchContainer";
+import { Breadcrumb } from "@/components/Breadcrumb";
 
 export const metadata: Metadata = {
   title: 'Tickets',
@@ -30,6 +32,9 @@ export default async function TicketsPage() {
 
         return (
             <div className="max-w-7xl mx-auto p-6">
+                {/* Breadcrumb */}
+                <Breadcrumb className="mb-4" />
+                
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
                     <div>
@@ -53,6 +58,9 @@ export default async function TicketsPage() {
                         </Link>
                     )}
                 </div>
+
+                {/* Search Section */}
+                <SearchContainer />
 
                 {/* Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

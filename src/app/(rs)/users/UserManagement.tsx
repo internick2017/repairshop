@@ -7,6 +7,7 @@ import { Edit, Trash2, UserPlus, Save, X } from "lucide-react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { toast } from "sonner";
 
 // User type definition
 type User = {
@@ -32,16 +33,15 @@ const userFormSchema = z.object({
 interface UserManagementProps {
     currentUser: {
         id?: string;
-        email: string;
-        given_name?: string;
-        family_name?: string;
+        email: string | null;
+        given_name?: string | null;
+        family_name?: string | null;
     };
 }
 
 export function UserManagement({ currentUser }: UserManagementProps) {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [actionLoading, setActionLoading] = useState(false);
@@ -68,10 +68,10 @@ export function UserManagement({ currentUser }: UserManagementProps) {
             if (data.success) {
                 setUsers(data.users);
             } else {
-                setError(data.error || "Failed to fetch users");
+                toast.error(data.error || "Failed to fetch users");
             }
-        } catch (error) {
-            setError("Failed to fetch users");
+        } catch (_error) {
+            toast.error("Failed to fetch users");
         } finally {
             setLoading(false);
         }
@@ -88,7 +88,6 @@ export function UserManagement({ currentUser }: UserManagementProps) {
     const onSubmit = async (data: z.infer<typeof userFormSchema>) => {
         try {
             setActionLoading(true);
-            setError(null);
             
             if (editingUser) {
                 // Update existing user
@@ -120,6 +119,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                     setShowAddForm(false);
                     setEditingUser(null);
                     form.reset();
+                    toast.success("User updated successfully!");
                     
                     // Also fetch fresh data from server to ensure consistency
                     // Add a small delay to allow Kinde API to reflect changes
@@ -127,7 +127,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                         fetchUsers();
                     }, 1000);
                 } else {
-                    setError(result.error || "Failed to update user");
+                    toast.error(result.error || "Failed to update user");
                 }
             } else {
                 // Create new user
@@ -141,13 +141,14 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                 if (result.success) {
                     setShowAddForm(false);
                     form.reset();
+                    toast.success("User created successfully!");
                     fetchUsers();
                 } else {
-                    setError(result.error || "Failed to create user");
+                    toast.error(result.error || "Failed to create user");
                 }
             }
-        } catch (error) {
-            setError("An error occurred while saving the user");
+        } catch (_error) {
+            toast.error("An error occurred while saving the user");
         } finally {
             setActionLoading(false);
         }
@@ -161,19 +162,19 @@ export function UserManagement({ currentUser }: UserManagementProps) {
 
         try {
             setActionLoading(true);
-            setError(null);
             const response = await fetch(`/api/users/${userId}`, {
                 method: 'DELETE',
             });
             
             const result = await response.json();
             if (result.success) {
+                toast.success("User deleted successfully!");
                 fetchUsers();
             } else {
-                setError(result.error || "Failed to delete user");
+                toast.error(result.error || "Failed to delete user");
             }
-        } catch (error) {
-            setError("An error occurred while deleting the user");
+        } catch (_error) {
+            toast.error("An error occurred while deleting the user");
         } finally {
             setActionLoading(false);
         }
@@ -196,14 +197,12 @@ export function UserManagement({ currentUser }: UserManagementProps) {
         setShowAddForm(false);
         setEditingUser(null);
         form.reset();
-        setError(null);
     };
 
     // Handle toggle user status
     const handleToggleUserStatus = async (userId: string, currentStatus: boolean) => {
         try {
             setActionLoading(true);
-            setError(null);
             const response = await fetch(`/api/users/${userId}/toggle-status`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -212,12 +211,13 @@ export function UserManagement({ currentUser }: UserManagementProps) {
             
             const result = await response.json();
             if (result.success) {
+                toast.success(`User ${!currentStatus ? 'activated' : 'deactivated'} successfully!`);
                 fetchUsers();
             } else {
-                setError(result.error || "Failed to update user status");
+                toast.error(result.error || "Failed to update user status");
             }
-        } catch (error) {
-            setError("An error occurred while updating user status");
+        } catch (_error) {
+            toast.error("An error occurred while updating user status");
         } finally {
             setActionLoading(false);
         }
@@ -234,12 +234,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
 
     return (
         <div className="space-y-6">
-            {/* Error Display */}
-            {error && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                    <p className="text-red-700 dark:text-red-300">{error}</p>
-                </div>
-            )}
+
 
             {/* Header Actions */}
             <div className="flex justify-between items-center">
@@ -354,7 +349,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                 </tr>
                             </thead>
                             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                {users.map((user, index) => (
+                                                                 {users.map((user) => (
                                     <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div>
@@ -405,7 +400,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
                                                     size="sm"
                                                     variant="outline"
                                                     onClick={() => handleDeleteUser(user.id)}
-                                                    disabled={actionLoading || user.email === currentUser.email}
+                                                    disabled={actionLoading || Boolean(currentUser.email && user.email === currentUser.email)}
                                                     className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
