@@ -4,7 +4,54 @@ import { tickets } from "@/db/schema";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { eq } from "drizzle-orm";
 import { ticketInsertSchema } from "@/lib/zod-schemas/ticket";
+import { getAllTickets } from "@/lib/queries/getAllTickets";
 import * as Sentry from "@sentry/nextjs";
+
+export async function GET(request: NextRequest) {
+    try {
+        // Check authentication and permissions
+        const { getUser, getPermission } = getKindeServerSession();
+        const [user, managerPermission] = await Promise.all([
+            getUser(),
+            getPermission("manager")
+        ]);
+
+        if (!user) {
+            return NextResponse.json(
+                { error: 'Unauthorized' },
+                { status: 401 }
+            );
+        }
+
+        const isManager = managerPermission?.isGranted || false;
+        
+        // Fetch all tickets
+        const allTickets = await getAllTickets();
+        
+        // Filter tickets based on user permissions
+        const tickets = isManager 
+            ? allTickets // Managers see all tickets
+            : allTickets.filter(ticket => ticket.tech === user.email); // Regular employees see only their tickets
+
+        return NextResponse.json({ 
+            tickets,
+            count: tickets.length,
+            isManager,
+            userEmail: user.email,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        Sentry.captureException(error, {
+            tags: { component: 'TicketsAPI', action: 'fetch_tickets' }
+        });
+
+        console.error('Error fetching tickets:', error);
+        return NextResponse.json(
+            { error: 'Failed to fetch tickets' },
+            { status: 500 }
+        );
+    }
+}
 
 export async function POST(request: NextRequest) {
     try {

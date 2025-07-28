@@ -16,7 +16,8 @@
       "Bash(yarn dev)",
       "Bash(rm:*)",
       "Bash(npx rimraf:*)",
-      "Bash(npm run clean:*)"
+      "Bash(npm run clean:*)",
+      "Bash(curl:*)"
     ],
     "deny": []
   }

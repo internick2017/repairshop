@@ -1,9 +1,13 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, FileText, CheckCircle, Clock, Search, X } from "lucide-react";
+import { Plus, FileText, CheckCircle, Clock, Search, X, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { usePollingWithLocalStorage } from "@/hooks/usePolling";
+import { usePaginatedData } from "@/hooks/useUrlPagination";
+import { UrlPagination } from "@/components/pagination/UrlPagination";
+import { fetchTickets } from "@/lib/api/tickets";
 import Link from "next/link";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { TicketTable } from "./TicketTable";
@@ -14,8 +18,30 @@ interface TicketsPageClientProps {
   isManager: boolean;
 }
 
-export function TicketsPageClient({ ticketsList, isManager }: TicketsPageClientProps) {
-  const [searchQuery, setSearchQuery] = useState("");
+export function TicketsPageClient({ ticketsList: initialTickets, isManager }: TicketsPageClientProps) {
+  // Use polling for live updates
+  const {
+    data: liveTicketsData,
+    loading,
+    error,
+    lastUpdated,
+    refetch,
+    isPolling
+  } = usePollingWithLocalStorage<{ tickets: Ticket[] }>(
+    'tickets-cache',
+    fetchTickets,
+    {
+      interval: 30000, // 30 seconds
+      enabled: true,
+      immediate: false, // Don't fetch immediately since we have initial data
+      onError: (error) => {
+        console.error('Ticket polling error:', error);
+      }
+    }
+  );
+
+  // Use live data if available, fallback to initial data
+  const ticketsList = liveTicketsData?.tickets || initialTickets;
 
   // Define searchable fields for tickets
   const searchFields = [
@@ -25,13 +51,29 @@ export function TicketsPageClient({ ticketsList, isManager }: TicketsPageClientP
     'tech'
   ];
 
-  // Memoized filtered tickets based on search query
+  // URL-based pagination with search integration
+  const pagination = usePaginatedData(ticketsList, {
+    defaultPageSize: 10,
+    maxPageSize: 100,
+    showPageRange: 5
+  });
+
+  // Handle search input changes
+  const handleSearchChange = useCallback((value: string) => {
+    pagination.setSearch(value);
+  }, [pagination]);
+
+  const handleClearSearch = useCallback(() => {
+    pagination.setSearch('');
+  }, [pagination]);
+
+  // Memoized filtered tickets based on search query from URL
   const filteredTickets = useMemo(() => {
-    if (!searchQuery.trim()) {
+    if (!pagination.search.trim()) {
       return ticketsList;
     }
 
-    const query = searchQuery.toLowerCase().trim();
+    const query = pagination.search.toLowerCase().trim();
     return ticketsList.filter(ticket => {
       return searchFields.some(field => {
         const value = ticket[field as keyof Ticket];
@@ -50,15 +92,14 @@ export function TicketsPageClient({ ticketsList, isManager }: TicketsPageClientP
         return false;
       });
     });
-  }, [ticketsList, searchQuery, searchFields]);
+  }, [ticketsList, pagination.search, searchFields]);
 
-  const handleSearchChange = useCallback((value: string) => {
-    setSearchQuery(value);
-  }, []);
-
-  const handleClearSearch = useCallback(() => {
-    setSearchQuery("");
-  }, []);
+  // Update pagination with filtered data
+  const paginatedData = usePaginatedData(filteredTickets, {
+    defaultPageSize: pagination.pageSize,
+    maxPageSize: 100,
+    showPageRange: 5
+  });
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -89,29 +130,66 @@ export function TicketsPageClient({ ticketsList, isManager }: TicketsPageClientP
         )}
       </div>
 
-      {/* Search Bar */}
-      <div className="max-w-md mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            type="text"
-            placeholder="Search tickets by ID, title, tech, or description..."
-            value={searchQuery}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="pl-10 pr-10"
-          />
-          {searchQuery && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClearSearch}
-              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          )}
+      {/* Search Bar and Live Update Controls */}
+      <div className="flex items-center gap-4 mb-6">
+        <div className="max-w-md flex-1">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              type="text"
+              placeholder="Search tickets by ID, title, tech, or description..."
+              value={pagination.search}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="pl-10 pr-10"
+            />
+            {pagination.search && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearSearch}
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Live Update Indicator and Controls */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refetch}
+            disabled={loading}
+            className="gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? 'Updating...' : 'Refresh'}
+          </Button>
+          
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            {isPolling && (
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                Live
+              </div>
+            )}
+            {lastUpdated && (
+              <div className="text-xs">
+                Updated: {lastUpdated.toLocaleTimeString()}
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-sm text-red-700 dark:text-red-300 mb-6">
+          <strong>Update failed:</strong> {error.message}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -122,10 +200,10 @@ export function TicketsPageClient({ ticketsList, isManager }: TicketsPageClientP
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                {searchQuery ? "Filtered" : (isManager ? "Total" : "My")} Tickets
+                {pagination.search ? "Filtered" : (isManager ? "Total" : "My")} Tickets
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                {searchQuery ? filteredTickets.length : ticketsList.length}
+                {pagination.search ? filteredTickets.length : ticketsList.length}
               </p>
             </div>
           </div>
@@ -161,8 +239,24 @@ export function TicketsPageClient({ ticketsList, isManager }: TicketsPageClientP
       </div>
 
       {/* Tickets Table */}
+      {paginatedData.data.length > 0 && (
+        <TicketTable tickets={paginatedData.data} />
+      )}
+
+      {/* Pagination */}
       {filteredTickets.length > 0 && (
-        <TicketTable tickets={filteredTickets} />
+        <UrlPagination
+          page={paginatedData.page}
+          pageSize={paginatedData.pageSize}
+          totalItems={paginatedData.totalItems}
+          totalPages={paginatedData.totalPages}
+          hasNextPage={paginatedData.hasNextPage}
+          hasPrevPage={paginatedData.hasPrevPage}
+          onPageChange={paginatedData.setPage}
+          onPageSizeChange={paginatedData.setPageSize}
+          getPageRange={paginatedData.getPageRange}
+          className="mt-6"
+        />
       )}
 
       {/* Empty State */}
