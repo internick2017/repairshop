@@ -2,8 +2,7 @@ import { getAllCustomers } from "@/lib/queries/getAllCustomers";
 import { BackButton } from "@/components/BackButton";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { redirect } from "next/navigation";
-import { CustomerList } from "./CustomerList";
-import { SearchContainer } from "./SearchContainer";
+import { CustomersPageClient } from "./CustomersPageClient";
 import { Breadcrumb } from "@/components/Breadcrumb";
 
 interface CustomersPageProps {
@@ -43,11 +42,8 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
                     </div>
                 </div>
                 
-                {/* Search Section */}
-                <SearchContainer />
-                
-                {/* Customer List */}
-                <CustomerList 
+                {/* Customer List with Integrated Search */}
+                <CustomersPageClient 
                     customers={customers} 
                     selectMode={select === "true"}
                 />

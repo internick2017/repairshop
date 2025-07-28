@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { DataTable } from "@/components/ui/data-table";
 import { columns } from "./columns";
 import { Ticket } from "@/types";
@@ -9,38 +10,37 @@ interface TicketTableProps {
   tickets: Ticket[];
 }
 
-export function TicketTable({ tickets }: TicketTableProps) {
-  const statusOptions = [
-    {
-      value: "false",
-      label: "Pending",
-      icon: Clock,
-    },
-    {
-      value: "true",
-      label: "Completed",
-      icon: CheckCircle,
-    },
-  ];
+const statusOptions = [
+  {
+    value: "false",
+    label: "Pending",
+    icon: Clock,
+  },
+  {
+    value: "true",
+    label: "Completed",
+    icon: CheckCircle,
+  },
+];
 
-  const filterOptions = [
-    {
-      columnId: "completed",
-      title: "Status",
-      options: statusOptions,
-    },
-  ];
+const filterOptions = [
+  {
+    columnId: "completed",
+    title: "Status",
+    options: statusOptions,
+  },
+];
 
+export const TicketTable = React.memo<TicketTableProps>(function TicketTable({ tickets }) {
   return (
     <DataTable
       columns={columns}
       data={tickets}
-      searchKeys={["title", "tech", "customer"]}
-      searchPlaceholder="Search tickets by title, tech, or customer..."
+      showToolbar={false}
       showPagination={true}
       filterOptions={filterOptions}
       showExport={true}
       exportFilename="tickets"
     />
   );
-} 
+}); 

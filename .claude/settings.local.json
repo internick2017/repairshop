@@ -13,7 +13,10 @@
       "Bash(yarn install)",
       "Bash(yarn dev:fast)",
       "Bash(yarn clean)",
-      "Bash(yarn dev)"
+      "Bash(yarn dev)",
+      "Bash(rm:*)",
+      "Bash(npx rimraf:*)",
+      "Bash(npm run clean:*)"
     ],
     "deny": []
   }
