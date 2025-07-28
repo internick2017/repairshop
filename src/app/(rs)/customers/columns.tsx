@@ -4,7 +4,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Mail, Phone, User, Calendar, Edit, Trash2, Plus } from "lucide-react"
+import { Mail, Phone, User, Calendar, Edit, Trash2, Plus, ArrowUpDown } from "lucide-react"
 import Link from "next/link"
 
 export interface Customer {
@@ -46,7 +46,17 @@ export const columns: ColumnDef<Customer>[] = [
   },
   {
     accessorKey: "name",
-    header: "Name",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Name
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     cell: ({ row }) => {
       const customer = row.original
       return (
@@ -127,7 +137,17 @@ export const columns: ColumnDef<Customer>[] = [
   },
   {
     accessorKey: "createdAt",
-    header: "Customer Since",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Customer Since
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     cell: ({ row }) => {
       const customer = row.original
       return (

@@ -3,7 +3,7 @@
 import { DataTable } from "@/components/ui/data-table";
 import { columns } from "./columns";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, CheckCircle, XCircle } from "lucide-react";
 import Link from "next/link";
 import { Customer } from "@/types";
 
@@ -14,6 +14,27 @@ interface CustomerTableProps {
 }
 
 export function CustomerTable({ customers, selectMode = false }: CustomerTableProps) {
+  const statusOptions = [
+    {
+      value: "true",
+      label: "Active",
+      icon: CheckCircle,
+    },
+    {
+      value: "false",
+      label: "Inactive",
+      icon: XCircle,
+    },
+  ];
+
+  const filterOptions = [
+    {
+      columnId: "active",
+      title: "Status",
+      options: statusOptions,
+    },
+  ];
+
   return (
     <div className="space-y-4">
       {/* Actions */}
@@ -35,6 +56,9 @@ export function CustomerTable({ customers, selectMode = false }: CustomerTablePr
         searchKeys={["name", "email", "phone", "location"]}
         searchPlaceholder="Search customers by name, email, phone, or location..."
         showPagination={true}
+        filterOptions={filterOptions}
+        showExport={true}
+        exportFilename="customers"
       />
     </div>
   );

@@ -1,18 +1,34 @@
 "use client";
 
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar, User, FileText, Wrench } from "lucide-react";
+import { Calendar, User, Wrench } from "lucide-react";
 import Link from "next/link";
 import { SearchTicket } from "@/types";
 
 interface SearchResultsProps {
   results: SearchTicket[];
   className?: string;
+  isLoading?: boolean;
 }
 
+export const SearchResults = React.memo(function SearchResults({ results, className, isLoading }: SearchResultsProps) {
+  if (isLoading) {
+    return (
+      <div className={className}>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div className="animate-pulse">
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
+            <div className="space-y-3">
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-
-export function SearchResults({ results, className }: SearchResultsProps) {
   if (results.length === 0) {
     return null;
   }
@@ -84,4 +100,4 @@ export function SearchResults({ results, className }: SearchResultsProps) {
       </div>
     </div>
   );
-} 
+}); 

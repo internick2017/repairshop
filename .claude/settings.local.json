@@ -4,7 +4,16 @@
       "Bash(npm run build:*)",
       "Bash(npm run lint)",
       "Bash(yarn add:*)",
-      "Bash(yarn why:*)"
+      "Bash(yarn why:*)",
+      "Bash(npm run dev:*)",
+      "Bash(timeout 30s npm run dev)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npx tsc:*)",
+      "Bash(yarn --version)",
+      "Bash(yarn install)",
+      "Bash(yarn dev:fast)",
+      "Bash(yarn clean)",
+      "Bash(yarn dev)"
     ],
     "deny": []
   }

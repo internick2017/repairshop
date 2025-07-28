@@ -4,7 +4,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { FileText, User, Calendar, Wrench, CheckCircle, Edit } from "lucide-react"
+import { FileText, User, Calendar, Wrench, CheckCircle, Edit, ArrowUpDown } from "lucide-react"
 import Link from "next/link"
 
 export interface Ticket {
@@ -20,7 +20,7 @@ export interface Ticket {
     firstName: string
     lastName: string
     email: string
-  }
+  } | null
 }
 
 export const columns: ColumnDef<Ticket>[] = [
@@ -48,7 +48,17 @@ export const columns: ColumnDef<Ticket>[] = [
   },
   {
     accessorKey: "id",
-    header: "Ticket ID",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Ticket ID
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     cell: ({ row }) => {
       const ticket = row.original
       return (
@@ -63,7 +73,17 @@ export const columns: ColumnDef<Ticket>[] = [
   },
   {
     accessorKey: "title",
-    header: "Title",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Title
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     cell: ({ row }) => {
       const ticket = row.original
       return (
@@ -139,7 +159,17 @@ export const columns: ColumnDef<Ticket>[] = [
   },
   {
     accessorKey: "createdAt",
-    header: "Created",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Created
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     cell: ({ row }) => {
       const ticket = row.original
       return (

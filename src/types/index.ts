@@ -33,7 +33,7 @@ export interface Ticket {
     lastName: string;
     email: string;
     phone: string;
-  };
+  } | null;
 }
 
 // Search-specific ticket interface with flattened customer data

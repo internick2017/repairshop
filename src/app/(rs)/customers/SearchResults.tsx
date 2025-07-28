@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,9 +11,31 @@ import { Customer } from "@/types";
 interface SearchResultsProps {
   results: Customer[];
   className?: string;
+  isLoading?: boolean;
 }
 
-export function SearchResults({ results, className }: SearchResultsProps) {
+export const SearchResults = React.memo(function SearchResults({ results, className, isLoading }: SearchResultsProps) {
+  if (isLoading) {
+    return (
+      <div className={className}>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader className="pb-3">
+                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (results.length === 0) {
     return null;
   }
@@ -56,4 +79,4 @@ export function SearchResults({ results, className }: SearchResultsProps) {
       </div>
     </div>
   );
-} 
+}); 

@@ -6,19 +6,33 @@ import { Table } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DataTableViewOptions } from "./data-table-view-options"
-
-// import { statuses } from "@/lib/data"
+import { DataTableFacetedFilter } from "./data-table-faceted-filter"
+import { Download } from "lucide-react"
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
   searchKey?: string
   searchKeys?: string[]
   searchPlaceholder?: string
+  showExport?: boolean
+  onExport?: () => void
+  filterOptions?: {
+    columnId: string
+    title: string
+    options: {
+      label: string
+      value: string
+      icon?: React.ComponentType<{ className?: string }>
+    }[]
+  }[]
 }
 
 export function DataTableToolbar<TData>({
   table,
   searchPlaceholder = "Search...",
+  showExport = false,
+  onExport,
+  filterOptions = [],
 }: DataTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0
 
@@ -36,6 +50,14 @@ export function DataTableToolbar<TData>({
           }}
           className="h-8 w-[150px] lg:w-[250px]"
         />
+        {filterOptions.map((filter) => (
+          <DataTableFacetedFilter
+            key={filter.columnId}
+            column={table.getColumn(filter.columnId)}
+            title={filter.title}
+            options={filter.options}
+          />
+        ))}
         {(isFiltered || globalFilter) && (
           <Button
             variant="ghost"
@@ -50,7 +72,20 @@ export function DataTableToolbar<TData>({
           </Button>
         )}
       </div>
-      <DataTableViewOptions table={table} />
+      <div className="flex items-center space-x-2">
+        {showExport && onExport && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8"
+            onClick={onExport}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Export
+          </Button>
+        )}
+        <DataTableViewOptions table={table} />
+      </div>
     </div>
   )
 } 

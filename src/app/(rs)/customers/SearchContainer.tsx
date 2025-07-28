@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { SearchForm } from "./SearchForm";
 import { SearchResults } from "./SearchResults";
 import { Customer } from "@/types";
@@ -13,15 +13,15 @@ export function SearchContainer({ className }: SearchContainerProps = {}) {
   const [searchResults, setSearchResults] = useState<Customer[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  const handleSearchResults = (results: Customer[]) => {
+  const handleSearchResults = useCallback((results: Customer[], query: string = '') => {
     setSearchResults(results);
-    setIsSearching(true);
-  };
+    setIsSearching(query.trim().length > 0);
+  }, []);
 
-  const handleClearSearch = () => {
+  const handleClearSearch = useCallback(() => {
     setSearchResults([]);
     setIsSearching(false);
-  };
+  }, []);
 
   return (
     <div className={className}>

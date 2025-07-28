@@ -27,6 +27,7 @@ import {
 
 import { DataTablePagination } from "./data-table-pagination"
 import { DataTableToolbar } from "./data-table-toolbar"
+import { exportToCSV } from "@/lib/export-utils"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -36,6 +37,17 @@ interface DataTableProps<TData, TValue> {
   searchPlaceholder?: string
   showToolbar?: boolean
   showPagination?: boolean
+  showExport?: boolean
+  exportFilename?: string
+  filterOptions?: {
+    columnId: string
+    title: string
+    options: {
+      label: string
+      value: string
+      icon?: React.ComponentType<{ className?: string }>
+    }[]
+  }[]
 }
 
 export function DataTable<TData, TValue>({
@@ -46,6 +58,9 @@ export function DataTable<TData, TValue>({
   searchPlaceholder = "Search...",
   showToolbar = true,
   showPagination = true,
+  showExport = false,
+  exportFilename = "data",
+  filterOptions = [],
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
@@ -78,6 +93,19 @@ export function DataTable<TData, TValue>({
     globalFilterFn: "includesString",
   })
 
+  const handleExport = React.useCallback(() => {
+    const filteredData = table.getFilteredRowModel().rows.map(row => row.original);
+    const exportColumns = columns
+      .filter(col => col.id !== "select" && col.id !== "actions")
+      .map(col => ({
+        key: col.id || (col as { accessorKey?: string }).accessorKey || "",
+        header: typeof col.header === "string" ? col.header : col.id || ""
+      }))
+      .filter(col => col.key);
+    
+    exportToCSV(filteredData, exportFilename, exportColumns);
+  }, [table, columns, exportFilename])
+
   return (
     <div className="space-y-4">
       {showToolbar && (
@@ -86,6 +114,9 @@ export function DataTable<TData, TValue>({
           searchKey={searchKey}
           searchKeys={searchKeys}
           searchPlaceholder={searchPlaceholder}
+          filterOptions={filterOptions}
+          showExport={showExport}
+          onExport={handleExport}
         />
       )}
       <div className="rounded-md border">

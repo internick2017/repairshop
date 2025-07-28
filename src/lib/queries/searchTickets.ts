@@ -1,17 +1,40 @@
 import { db } from "@/db";
 import { tickets, customers } from "@/db/schema";
-import { ilike, or, eq } from "drizzle-orm";
+import { ilike, or, eq, sql, desc } from "drizzle-orm";
 
-export async function searchTickets(query: string) {
+export interface SearchTicketsParams {
+  query: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface SearchTicketsResult {
+  data: any[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export async function searchTickets({
+  query,
+  page = 1,
+  pageSize = 10,
+}: SearchTicketsParams): Promise<SearchTicketsResult> {
   if (!query.trim()) {
-    return [];
+    return {
+      data: [],
+      totalCount: 0,
+      page,
+      pageSize,
+      totalPages: 0,
+    };
   }
 
   const searchTerm = `%${query.trim()}%`;
 
   try {
-    // First, get all tickets with their customer data
-    const allTickets = await db
+    const results = await db
       .select({
         id: tickets.id,
         title: tickets.title,
@@ -28,21 +51,50 @@ export async function searchTickets(query: string) {
       })
       .from(tickets)
       .leftJoin(customers, eq(tickets.customerId, customers.id))
-      .orderBy(tickets.createdAt);
+      .where(
+        or(
+          ilike(tickets.title, searchTerm),
+          ilike(tickets.description, searchTerm),
+          ilike(tickets.tech, searchTerm),
+          ilike(customers.firstName, searchTerm),
+          ilike(customers.lastName, searchTerm),
+          ilike(customers.email, searchTerm),
+          sql`LOWER(${customers.firstName} || ' ' || ${customers.lastName}) LIKE LOWER(${searchTerm})`
+        )
+      )
+      .orderBy(desc(tickets.createdAt));
 
-    // Then filter the results in JavaScript
-    const filteredResults = allTickets.filter(ticket => {
-      const searchLower = query.toLowerCase();
-      return (
-        ticket.title.toLowerCase().includes(searchLower) ||
-        ticket.description.toLowerCase().includes(searchLower) ||
-        (ticket.customerFirstName && ticket.customerFirstName.toLowerCase().includes(searchLower)) ||
-        (ticket.customerLastName && ticket.customerLastName.toLowerCase().includes(searchLower)) ||
-        (ticket.customerEmail && ticket.customerEmail.toLowerCase().includes(searchLower))
+    // Get total count for pagination
+    const countQuery = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(tickets)
+      .leftJoin(customers, eq(tickets.customerId, customers.id))
+      .where(
+        or(
+          ilike(tickets.title, searchTerm),
+          ilike(tickets.description, searchTerm),
+          ilike(tickets.tech, searchTerm),
+          ilike(customers.firstName, searchTerm),
+          ilike(customers.lastName, searchTerm),
+          ilike(customers.email, searchTerm),
+          sql`LOWER(${customers.firstName} || ' ' || ${customers.lastName}) LIKE LOWER(${searchTerm})`
+        )
       );
-    });
 
-    return filteredResults;
+    const totalCount = Number(countQuery[0]?.count || 0);
+    const totalPages = Math.ceil(totalCount / pageSize);
+    const offset = (page - 1) * pageSize;
+
+    // Apply pagination
+    const paginatedResults = results.slice(offset, offset + pageSize);
+
+    return {
+      data: paginatedResults,
+      totalCount,
+      page,
+      pageSize,
+      totalPages,
+    };
   } catch (error) {
     console.error("Error searching tickets:", error);
     throw new Error("Failed to search tickets");

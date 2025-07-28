@@ -1,17 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { SearchButton } from "@/components/SearchButton";
 import { Search } from "lucide-react";
 import { useSafeAction } from "@/lib/hooks/use-safe-action";
+import { useDebounce } from "@/lib/hooks/use-debounce";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 interface SearchFormProps<T> {
-  onSearchResults: (results: T[]) => void;
+  onSearchResults: (results: T[], query?: string) => void;
   searchAction: (params: { query: string }) => Promise<{ data?: T[]; serverError?: unknown }>;
   placeholder?: string;
   title?: string;
@@ -32,29 +34,48 @@ export function SearchForm<T>({
   icon = <Search className="h-5 w-5" />
 }: SearchFormProps<T>) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
-  const { execute } = useSafeAction(searchAction, {
-    onSuccess: (data) => {
-      onSearchResults(data.data || []);
-      if (data.data?.length === 0) {
+  const safeActionOptions = useMemo(() => ({
+    onSuccess: (data: any) => {
+      onSearchResults(data.data || [], debouncedSearchQuery);
+      if (data.data?.length === 0 && debouncedSearchQuery.trim()) {
         toast.info(emptyMessage);
       }
+      setIsSearching(false);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error(error || errorMessage);
+      setIsSearching(false);
     },
-  });
+  }), [onSearchResults, debouncedSearchQuery, emptyMessage, errorMessage]);
+
+  const { execute } = useSafeAction(searchAction, safeActionOptions);
+
+  // Auto-search when debounced value changes
+  useEffect(() => {
+    if (debouncedSearchQuery.trim()) {
+      setIsSearching(true);
+      execute({ query: debouncedSearchQuery });
+    } else if (!debouncedSearchQuery) {
+      onSearchResults([], '');
+      setIsSearching(false);
+    }
+  }, [debouncedSearchQuery, execute, onSearchResults]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
+    if (searchQuery.trim() && searchQuery !== debouncedSearchQuery) {
+      setIsSearching(true);
       execute({ query: searchQuery });
     }
   };
 
   const handleClear = () => {
     setSearchQuery("");
-    onSearchResults([]);
+    onSearchResults([], '');
+    setIsSearching(false);
   };
 
   return (
@@ -95,19 +116,19 @@ export function SearchForm<T>({
           <div className="flex gap-2">
             <SearchButton 
               className="flex-1 sm:flex-initial"
-              disabled={!searchQuery.trim()}
             >
-              Search
+              {isSearching ? "Searching..." : "Search"}
             </SearchButton>
             {searchQuery && (
-              <SearchButton
+              <Button
                 type="button"
                 variant="outline"
                 onClick={handleClear}
                 className="sm:w-auto"
+                disabled={isSearching}
               >
                 Clear
-              </SearchButton>
+              </Button>
             )}
           </div>
         </form>
