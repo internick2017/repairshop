@@ -107,12 +107,12 @@ export function TicketsPageClient({ ticketsList: initialTickets, isManager }: Ti
       <Breadcrumb className="mb-4" />
       
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
             {isManager ? "All Repair Tickets" : "My Tickets"}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
+          <p className="text-gray-600 dark:text-gray-400 mt-2 text-lg">
             {isManager 
               ? "Manage and track all repair tickets" 
               : "View and update your assigned tickets"
@@ -122,8 +122,8 @@ export function TicketsPageClient({ ticketsList: initialTickets, isManager }: Ti
         
         {isManager && (
           <Link href="/customers?select=true">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-              <Plus className="w-4 h-4 mr-2" />
+            <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200">
+              <Plus className="w-5 h-5 mr-2" />
               New Ticket
             </Button>
           </Link>
@@ -131,55 +131,57 @@ export function TicketsPageClient({ ticketsList: initialTickets, isManager }: Ti
       </div>
 
       {/* Search Bar and Live Update Controls */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="max-w-md flex-1">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              type="text"
-              placeholder="Search tickets by ID, title, tech, or description..."
-              value={pagination.search}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-10 pr-10"
-            />
-            {pagination.search && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearSearch}
-                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            )}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-4 mb-6">
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          <div className="flex-1 w-full sm:max-w-2xl">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Input
+                type="text"
+                placeholder="Search tickets by ID, title, tech, or description..."
+                value={pagination.search}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="pl-12 pr-10 py-3 text-base border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-lg"
+              />
+              {pagination.search && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearSearch}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Live Update Indicator and Controls */}
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={refetch}
-            disabled={loading}
-            className="gap-2"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            {loading ? 'Updating...' : 'Refresh'}
-          </Button>
-          
-          <div className="text-xs text-gray-500 dark:text-gray-400">
-            {isPolling && (
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                Live
-              </div>
-            )}
-            {lastUpdated && (
-              <div className="text-xs">
-                Updated: {lastUpdated.toLocaleTimeString()}
-              </div>
-            )}
+          {/* Live Update Indicator and Controls */}
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="default"
+              onClick={refetch}
+              disabled={loading}
+              className="gap-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              {loading ? 'Updating...' : 'Refresh'}
+            </Button>
+            
+            <div className="flex flex-col items-end">
+              {isPolling && (
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-green-600 dark:text-green-400 font-medium">Live</span>
+                </div>
+              )}
+              {lastUpdated && (
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  Updated: {lastUpdated.toLocaleTimeString()}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -193,44 +195,44 @@ export function TicketsPageClient({ ticketsList: initialTickets, isManager }: Ti
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/10 dark:to-gray-800 rounded-xl shadow-lg border border-blue-100 dark:border-blue-900/20 p-6 hover:shadow-xl transition-shadow duration-300">
           <div className="flex items-center">
-            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
-              <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+              <FileText className="w-7 h-7 text-white" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                 {pagination.search ? "Filtered" : (isManager ? "Total" : "My")} Tickets
               </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <p className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
                 {pagination.search ? filteredTickets.length : ticketsList.length}
               </p>
             </div>
           </div>
         </div>
         
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-gradient-to-br from-yellow-50 to-white dark:from-yellow-900/10 dark:to-gray-800 rounded-xl shadow-lg border border-yellow-100 dark:border-yellow-900/20 p-6 hover:shadow-xl transition-shadow duration-300">
           <div className="flex items-center">
-            <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg flex items-center justify-center">
-              <Clock className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+            <div className="w-14 h-14 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+              <Clock className="w-7 h-7 text-white" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <p className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
                 {filteredTickets.filter(t => !t.completed).length}
               </p>
             </div>
           </div>
         </div>
         
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-gradient-to-br from-green-50 to-white dark:from-green-900/10 dark:to-gray-800 rounded-xl shadow-lg border border-green-100 dark:border-green-900/20 p-6 hover:shadow-xl transition-shadow duration-300">
           <div className="flex items-center">
-            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
+            <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
+              <CheckCircle className="w-7 h-7 text-white" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completed</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <p className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
                 {filteredTickets.filter(t => t.completed).length}
               </p>
             </div>

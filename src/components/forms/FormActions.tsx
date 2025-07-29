@@ -34,7 +34,7 @@ export function FormActions({
 }: FormActionsProps) {
   return (
     <div className={cn(
-      "flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200 dark:border-gray-800",
+      "flex flex-col sm:flex-row gap-6 pt-8 mt-8 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50/50 to-white/50 dark:from-gray-800/50 dark:to-gray-900/50 rounded-lg p-6 -mx-6 -mb-6",
       className
     )}>
       <Button 
@@ -42,18 +42,18 @@ export function FormActions({
         disabled={isSubmitting || disabled}
         variant={submitVariant}
         className={cn(
-          "flex-1 font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
-          submitVariant === "default" && "bg-blue-600 hover:bg-blue-700 text-white",
+          "flex-1 font-semibold py-4 px-8 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-lg",
+          submitVariant === "default" && "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white",
           submitClassName
         )}
       >
         {isSubmitting ? (
-          <span className="flex items-center space-x-2">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span>{submitLoadingText}</span>
+          <span className="flex items-center space-x-3">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span className="text-lg">{submitLoadingText}</span>
           </span>
         ) : (
-          submitText
+          <span className="text-lg">{submitText}</span>
         )}
       </Button>
       
@@ -64,11 +64,11 @@ export function FormActions({
           disabled={isSubmitting || disabled}
           onClick={onReset}
           className={cn(
-            "flex-1 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
+            "flex-1 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 font-semibold py-4 px-8 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed",
             resetClassName
           )}
         >
-          {resetText}
+          <span className="text-lg">{resetText}</span>
         </Button>
       )}
     </div>
