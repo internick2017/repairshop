@@ -12,6 +12,9 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Suspense } from "react";
 import { FormSkeleton } from "@/components/FormSkeleton";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 type Customer = InferSelectModel<typeof customers>;
 type Ticket = InferSelectModel<typeof tickets>;
 

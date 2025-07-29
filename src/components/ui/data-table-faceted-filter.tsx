@@ -38,6 +38,23 @@ export function DataTableFacetedFilter<TData, TValue>({
 }: DataTableFacetedFilterProps<TData, TValue>) {
   const facets = column?.getFacetedUniqueValues()
   const selectedValues = new Set(column?.getFilterValue() as string[])
+  
+  const handleToggleOption = React.useCallback((optionValue: string) => {
+    const currentValues = column?.getFilterValue() as string[] || []
+    const isCurrentlySelected = currentValues.includes(optionValue)
+    const newValues = isCurrentlySelected
+      ? currentValues.filter(value => value !== optionValue)
+      : [...currentValues, optionValue]
+    
+    console.log('Toggle option:', {
+      optionValue,
+      currentValues,
+      isCurrentlySelected,
+      newValues
+    })
+    
+    column?.setFilterValue(newValues.length ? newValues : undefined)
+  }, [column])
 
   return (
     <Popover>
@@ -81,66 +98,63 @@ export function DataTableFacetedFilter<TData, TValue>({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[200px] p-0" align="start">
-        <Command>
-          <CommandInput placeholder={title} />
-          <CommandList>
-            <CommandEmpty>No results found.</CommandEmpty>
-            <CommandGroup>
-              {options.map((option) => {
-                const isSelected = selectedValues.has(option.value)
-                return (
-                  <CommandItem
-                    key={option.value}
-                    onSelect={() => {
-                      if (isSelected) {
-                        selectedValues.delete(option.value)
-                      } else {
-                        selectedValues.add(option.value)
-                      }
-                      const filterValues = Array.from(selectedValues)
-                      column?.setFilterValue(
-                        filterValues.length ? filterValues : undefined
-                      )
-                    }}
-                  >
-                    <div
-                      className={cn(
-                        "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-                        isSelected
-                          ? "bg-primary text-primary-foreground"
-                          : "opacity-50 [&_svg]:invisible"
-                      )}
-                    >
-                      <CheckIcon className={cn("h-4 w-4")} />
-                    </div>
-                    {option.icon && (
-                      <option.icon className="mr-2 h-4 w-4 text-muted-foreground" />
+        <div className="p-3">
+          <div className="mb-2">
+            <input
+              type="text"
+              placeholder={`Search ${title}...`}
+              className="w-full px-2 py-1 text-sm border rounded"
+            />
+          </div>
+          <div className="space-y-1 max-h-[200px] overflow-y-auto">
+            {options.map((option) => {
+              const isSelected = selectedValues.has(option.value)
+              return (
+                <div
+                  key={option.value}
+                  className="flex items-center space-x-2 p-2 rounded hover:bg-accent cursor-pointer"
+                  onClick={() => {
+                    console.log('Option clicked:', option.value, 'Current selected:', isSelected)
+                    handleToggleOption(option.value)
+                  }}
+                >
+                  <div
+                    className={cn(
+                      "flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                      isSelected
+                        ? "bg-primary text-primary-foreground"
+                        : "opacity-50"
                     )}
-                    <span>{option.label}</span>
-                    {facets?.get(option.value) && (
-                      <span className="ml-auto flex h-4 w-4 items-center justify-center font-mono text-xs">
-                        {facets.get(option.value)}
-                      </span>
-                    )}
-                  </CommandItem>
-                )
-              })}
-            </CommandGroup>
-            {selectedValues.size > 0 && (
-              <>
-                <CommandSeparator />
-                <CommandGroup>
-                  <CommandItem
-                    onSelect={() => column?.setFilterValue(undefined)}
-                    className="justify-center text-center"
                   >
-                    Clear filters
-                  </CommandItem>
-                </CommandGroup>
-              </>
-            )}
-          </CommandList>
-        </Command>
+                    {isSelected && <CheckIcon className="h-3 w-3" />}
+                  </div>
+                  {option.icon && (
+                    <option.icon className="h-4 w-4 text-muted-foreground" />
+                  )}
+                  <span className="text-sm">{option.label}</span>
+                  {facets?.get(option.value) && (
+                    <span className="ml-auto text-xs text-muted-foreground">
+                      {facets.get(option.value)}
+                    </span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+          {selectedValues.size > 0 && (
+            <div className="mt-2 pt-2 border-t">
+              <button
+                onClick={() => {
+                  console.log('Clear all clicked')
+                  column?.setFilterValue(undefined)
+                }}
+                className="w-full text-center text-sm text-muted-foreground hover:text-foreground py-1"
+              >
+                Clear filters
+              </button>
+            </div>
+          )}
+        </div>
       </PopoverContent>
     </Popover>
   )

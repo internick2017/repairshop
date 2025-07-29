@@ -39,7 +39,7 @@ const nextConfig: NextConfig = {
     if (dev) {
       // Disable type checking in development (use IDE instead)
       config.plugins = config.plugins.filter(
-        (plugin) => plugin.constructor.name !== 'ForkTsCheckerWebpackPlugin'
+        (plugin: any) => plugin.constructor.name !== 'ForkTsCheckerWebpackPlugin'
       );
     }
     

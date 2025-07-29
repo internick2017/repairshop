@@ -4,6 +4,9 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import * as Sentry from "@sentry/nextjs";
 import { TicketsPageClient } from "./TicketsPageClient";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
   title: 'Tickets',
 }

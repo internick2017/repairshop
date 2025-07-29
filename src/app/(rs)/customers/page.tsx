@@ -5,6 +5,9 @@ import { redirect } from "next/navigation";
 import { CustomersPageClient } from "./CustomersPageClient";
 import { Breadcrumb } from "@/components/Breadcrumb";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 interface CustomersPageProps {
     searchParams: Promise<{
         select?: string | string[];

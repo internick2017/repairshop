@@ -4,7 +4,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { FileText, User, Calendar, Wrench, CheckCircle, Edit, ArrowUpDown } from "lucide-react"
+import { FileText, User, Calendar, Wrench, CheckCircle, Edit, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import Link from "next/link"
 
 export interface Ticket {
@@ -49,13 +49,21 @@ export const columns: ColumnDef<Ticket>[] = [
   {
     accessorKey: "id",
     header: ({ column }) => {
+      const sorted = column.getIsSorted();
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-accent"
         >
           Ticket ID
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {sorted === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : sorted === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+          )}
         </Button>
       )
     },
@@ -74,13 +82,21 @@ export const columns: ColumnDef<Ticket>[] = [
   {
     accessorKey: "title",
     header: ({ column }) => {
+      const sorted = column.getIsSorted();
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-accent"
         >
           Title
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {sorted === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : sorted === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+          )}
         </Button>
       )
     },
@@ -99,7 +115,25 @@ export const columns: ColumnDef<Ticket>[] = [
   },
   {
     accessorKey: "tech",
-    header: "Tech",
+    header: ({ column }) => {
+      const sorted = column.getIsSorted();
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-accent"
+        >
+          Tech
+          {sorted === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : sorted === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+          )}
+        </Button>
+      )
+    },
     cell: ({ row }) => {
       const ticket = row.original
       return (
@@ -110,6 +144,10 @@ export const columns: ColumnDef<Ticket>[] = [
       )
     },
     enableGlobalFilter: true,
+    filterFn: (row, id, value) => {
+      const tech = row.getValue(id) as string;
+      return value.includes(tech);
+    },
   },
   {
     accessorKey: "customer",
@@ -137,7 +175,25 @@ export const columns: ColumnDef<Ticket>[] = [
   },
   {
     accessorKey: "completed",
-    header: "Status",
+    header: ({ column }) => {
+      const sorted = column.getIsSorted();
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-accent"
+        >
+          Status
+          {sorted === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : sorted === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+          )}
+        </Button>
+      )
+    },
     cell: ({ row }) => {
       const ticket = row.original
       const getStatusColor = (completed: boolean) => {
@@ -156,17 +212,30 @@ export const columns: ColumnDef<Ticket>[] = [
         </Badge>
       )
     },
+    filterFn: (row, id, value) => {
+      // Convert string filter values to boolean for comparison
+      const isCompleted = row.getValue(id) as boolean;
+      return value.includes(isCompleted.toString());
+    },
   },
   {
     accessorKey: "createdAt",
     header: ({ column }) => {
+      const sorted = column.getIsSorted();
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-accent"
         >
           Created
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {sorted === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : sorted === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+          )}
         </Button>
       )
     },
@@ -181,6 +250,100 @@ export const columns: ColumnDef<Ticket>[] = [
         </div>
       )
     },
+    filterFn: (row, id, value) => {
+      if (!value || !Array.isArray(value)) return true
+      
+      const cellValue = row.getValue(id)
+      if (!cellValue || typeof cellValue === 'object' && Object.keys(cellValue).length === 0) return true
+      
+      const date = new Date(cellValue as string | number | Date)
+      if (isNaN(date.getTime())) return true
+      
+      const [start, end] = value
+      
+      if (!start && !end) return true
+      
+      if (start && !end) {
+        const startDate = new Date(start)
+        return isNaN(startDate.getTime()) ? true : date >= startDate
+      }
+      
+      if (!start && end) {
+        const endDate = new Date(end)
+        return isNaN(endDate.getTime()) ? true : date <= endDate
+      }
+      
+      const startDate = new Date(start)
+      const endDate = new Date(end)
+      
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return true
+      
+      return date >= startDate && date <= endDate
+    },
+  },
+  {
+    accessorKey: "updatedAt",
+    header: ({ column }) => {
+      const sorted = column.getIsSorted();
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-accent"
+        >
+          Updated
+          {sorted === "asc" ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : sorted === "desc" ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+          )}
+        </Button>
+      )
+    },
+    cell: ({ row }) => {
+      const ticket = row.original
+      return (
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm">
+            {new Date(ticket.updatedAt).toLocaleDateString()}
+          </span>
+        </div>
+      )
+    },
+    filterFn: (row, id, value) => {
+      if (!value || !Array.isArray(value)) return true
+      
+      const cellValue = row.getValue(id)
+      if (!cellValue || typeof cellValue === 'object' && Object.keys(cellValue).length === 0) return true
+      
+      const date = new Date(cellValue as string | number | Date)
+      if (isNaN(date.getTime())) return true
+      
+      const [start, end] = value
+      
+      if (!start && !end) return true
+      
+      if (start && !end) {
+        const startDate = new Date(start)
+        return isNaN(startDate.getTime()) ? true : date >= startDate
+      }
+      
+      if (!start && end) {
+        const endDate = new Date(end)
+        return isNaN(endDate.getTime()) ? true : date <= endDate
+      }
+      
+      const startDate = new Date(start)
+      const endDate = new Date(end)
+      
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return true
+      
+      return date >= startDate && date <= endDate
+    },
+    enableHiding: true, // Allow hiding this column by default
   },
   {
     id: "actions",
