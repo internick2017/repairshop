@@ -24,6 +24,7 @@ export interface Ticket {
   description: string;
   completed: boolean;
   tech: string;
+  kindeUserId?: string | null;
   createdAt: Date;
   updatedAt: Date;
   customerId: number;

@@ -10,6 +10,7 @@ export async function getAllTickets() {
             description: tickets.description,
             completed: tickets.completed,
             tech: tickets.tech,
+            kindeUserId: tickets.kindeUserId,
             createdAt: tickets.createdAt,
             updatedAt: tickets.updatedAt,
             customerId: tickets.customerId,

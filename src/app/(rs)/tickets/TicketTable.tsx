@@ -42,16 +42,9 @@ const filterPresets = [
     ] as ColumnFiltersState,
   },
   {
-    label: "Completed Today",
+    label: "Completed Tickets",
     filters: [
-      { id: "completed", value: ["true"] },
-      { 
-        id: "updatedAt", 
-        value: [
-          new Date(new Date().setHours(0, 0, 0, 0)),
-          new Date()
-        ] 
-      }
+      { id: "completed", value: ["true"] }
     ] as ColumnFiltersState,
   },
   {
@@ -86,10 +79,10 @@ export const TicketTable = React.memo<TicketTableProps>(function TicketTable({ t
     <DataTableEnhanced
       columns={columns}
       data={tickets}
-      showToolbar={true}
+      showToolbar={false}
       showPagination={false}
       filterOptions={filterOptions}
-      dateFilterColumns={["createdAt", "updatedAt"]}
+      dateFilterColumns={["createdAt"]}
       filterPresets={filterPresets}
       showExport={true}
       exportFilename="tickets"

@@ -1,17 +1,18 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { customers } from "@/db/schema";
 import { InferSelectModel } from "drizzle-orm";
 import { CustomerTable } from "./CustomerTable";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, CheckCircle, XCircle, Search, X, RefreshCw } from "lucide-react";
+import { Plus, Users, CheckCircle, XCircle, Search, X, RefreshCw, Hash, User, Mail, Phone } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { usePollingWithLocalStorage } from "@/hooks/usePolling";
 import { usePaginatedData } from "@/hooks/useUrlPagination";
 import { UrlPagination } from "@/components/pagination/UrlPagination";
 import { fetchCustomers } from "@/lib/api/customers";
 import Link from "next/link";
+import { useDebounce } from "@/lib/hooks/use-debounce";
 
 type Customer = InferSelectModel<typeof customers>;
 
@@ -57,6 +58,12 @@ export function CustomersPageClient({ customers: initialCustomers, selectMode }:
         'zip'
     ];
 
+    // Local search state
+    const [searchValue, setSearchValue] = useState("");
+    const debouncedSearchValue = useDebounce(searchValue, 300);
+    const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+    const searchInputRef = useRef<HTMLInputElement>(null);
+
     // URL-based pagination with search integration
     const pagination = usePaginatedData(customers, {
         defaultPageSize: 10,
@@ -64,24 +71,120 @@ export function CustomersPageClient({ customers: initialCustomers, selectMode }:
         showPageRange: 5
     });
 
-    // Sync search from URL with local filtering
+    // Update pagination search when debounced value changes
     useEffect(() => {
-        // Update search when URL changes
-        if (pagination.search !== '') {
-            // Search is handled by pagination hook
+        if (debouncedSearchValue !== pagination.search) {
+            pagination.setSearch(debouncedSearchValue);
         }
-    }, [pagination.search]);
+    }, [debouncedSearchValue, pagination]);
 
     // Handle search input changes
     const handleSearchChange = useCallback((value: string) => {
-        pagination.setSearch(value);
-    }, [pagination]);
+        setSearchValue(value);
+        setSelectedSuggestionIndex(-1); // Reset selection when typing
+    }, []);
 
     const handleClearSearch = useCallback(() => {
+        setSearchValue('');
         pagination.setSearch('');
+        setSelectedSuggestionIndex(-1);
+        searchInputRef.current?.focus();
     }, [pagination]);
 
-    // Memoized filtered customers based on search query from URL
+    // Generate search suggestions
+    const searchSuggestions = useMemo(() => {
+        if (!searchValue || searchValue.length < 2) return [];
+        
+        const suggestions = [];
+        const query = searchValue.toLowerCase();
+        
+        // Customer ID suggestions
+        const customerIds = customers
+            .filter(c => c.id.toString().includes(query))
+            .slice(0, 3)
+            .map(c => ({ type: 'id', value: `#${c.id}`, label: `Customer #${c.id}`, icon: Hash }));
+        
+        // Name suggestions
+        const names = customers
+            .filter(c => 
+                c.firstName.toLowerCase().includes(query) ||
+                c.lastName.toLowerCase().includes(query) ||
+                `${c.firstName} ${c.lastName}`.toLowerCase().includes(query)
+            )
+            .map(c => ({ 
+                type: 'name', 
+                value: `${c.firstName} ${c.lastName}`, 
+                label: `${c.firstName} ${c.lastName}`, 
+                icon: User 
+            }))
+            .filter((name, index, arr) => arr.findIndex(n => n.value === name.value) === index)
+            .slice(0, 3);
+        
+        // Email suggestions
+        const emails = customers
+            .filter(c => c.email.toLowerCase().includes(query))
+            .map(c => ({ 
+                type: 'email', 
+                value: c.email, 
+                label: c.email, 
+                icon: Mail 
+            }))
+            .filter((email, index, arr) => arr.findIndex(e => e.value === email.value) === index)
+            .slice(0, 3);
+        
+        // Phone suggestions
+        const phones = customers
+            .filter(c => c.phone.includes(query))
+            .map(c => ({ 
+                type: 'phone', 
+                value: c.phone, 
+                label: c.phone, 
+                icon: Phone 
+            }))
+            .filter((phone, index, arr) => arr.findIndex(p => p.value === phone.value) === index)
+            .slice(0, 3);
+        
+        return [...customerIds, ...names, ...emails, ...phones].slice(0, 5);
+    }, [searchValue, customers]);
+
+    // Handle suggestion click
+    const handleSuggestionClick = useCallback((suggestion: any) => {
+        setSearchValue(suggestion.value);
+        pagination.setSearch(suggestion.value);
+        setSelectedSuggestionIndex(-1);
+        searchInputRef.current?.focus();
+    }, [pagination]);
+
+    // Handle keyboard navigation
+    const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+        if (searchSuggestions.length === 0) return;
+        
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                setSelectedSuggestionIndex(prev => 
+                    prev < searchSuggestions.length - 1 ? prev + 1 : 0
+                );
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                setSelectedSuggestionIndex(prev => 
+                    prev > 0 ? prev - 1 : searchSuggestions.length - 1
+                );
+                break;
+            case 'Enter':
+                e.preventDefault();
+                if (selectedSuggestionIndex >= 0) {
+                    handleSuggestionClick(searchSuggestions[selectedSuggestionIndex]);
+                }
+                break;
+            case 'Escape':
+                setSelectedSuggestionIndex(-1);
+                break;
+        }
+    }, [searchSuggestions, selectedSuggestionIndex, handleSuggestionClick]);
+
+    // Memoized filtered customers based on search query
     const filteredCustomers = useMemo(() => {
         if (!pagination.search.trim()) {
             return customers;
@@ -148,13 +251,15 @@ export function CustomersPageClient({ customers: initialCustomers, selectMode }:
                         <div className="relative">
                             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                             <Input
+                                ref={searchInputRef}
                                 type="text"
                                 placeholder="Search customers by name, email, phone, or address..."
-                                value={pagination.search}
+                                value={searchValue}
                                 onChange={(e) => handleSearchChange(e.target.value)}
+                                onKeyDown={handleKeyDown}
                                 className="pl-12 pr-10 py-3 text-base border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent rounded-lg"
                             />
-                            {pagination.search && (
+                            {searchValue && (
                                 <Button
                                     variant="ghost"
                                     size="sm"
@@ -163,6 +268,35 @@ export function CustomersPageClient({ customers: initialCustomers, selectMode }:
                                 >
                                     <X className="w-4 h-4" />
                                 </Button>
+                            )}
+                            
+                            {/* Search Suggestions */}
+                            {searchSuggestions.length > 0 && (
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+                                    {searchSuggestions.map((suggestion, index) => (
+                                        <button
+                                            key={`${suggestion.type}-${suggestion.value}`}
+                                            onClick={() => handleSuggestionClick(suggestion)}
+                                            className={`w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 transition-colors ${
+                                                index === selectedSuggestionIndex 
+                                                    ? 'bg-blue-50 dark:bg-blue-900/20' 
+                                                    : ''
+                                            } ${index === 0 ? 'rounded-t-lg' : ''} ${
+                                                index === searchSuggestions.length - 1 ? 'rounded-b-lg' : ''
+                                            }`}
+                                        >
+                                            <suggestion.icon className="w-4 h-4 text-gray-500" />
+                                            <div className="flex-1">
+                                                <div className="font-medium text-gray-900 dark:text-gray-100">
+                                                    {suggestion.label}
+                                                </div>
+                                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                                    {suggestion.type}
+                                                </div>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
                             )}
                         </div>
                     </div>

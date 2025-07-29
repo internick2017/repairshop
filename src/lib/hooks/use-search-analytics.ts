@@ -1,124 +1,87 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from 'react';
 
-interface SearchAnalyticsEvent {
+interface SearchAnalytics {
   query: string;
-  resultCount: number;
-  timestamp: number;
-  duration?: number;
-  searchType: string;
-  userId?: string;
+  resultsCount: number;
+  searchTime: number;
+  timestamp: Date;
+  searchType: 'instant' | 'debounced' | 'suggestion';
 }
 
-// In a real app, this would send to an analytics service
-class SearchAnalytics {
-  private events: SearchAnalyticsEvent[] = [];
-  private searchStartTime: Map<string, number> = new Map();
+interface UseSearchAnalyticsOptions {
+  onSearchComplete?: (analytics: SearchAnalytics) => void;
+  enableTracking?: boolean;
+}
 
-  startSearch(query: string, searchType: string) {
-    this.searchStartTime.set(`${searchType}:${query}`, Date.now());
-  }
+export function useSearchAnalytics(options: UseSearchAnalyticsOptions = {}) {
+  const { onSearchComplete, enableTracking = true } = options;
+  const searchStartTime = useRef<number | null>(null);
+  const lastQuery = useRef<string>('');
 
-  trackSearch(query: string, resultCount: number, searchType: string, userId?: string) {
-    const key = `${searchType}:${query}`;
-    const startTime = this.searchStartTime.get(key);
-    const duration = startTime ? Date.now() - startTime : undefined;
+  const startSearch = useCallback((query: string) => {
+    if (!enableTracking) return;
     
-    const event: SearchAnalyticsEvent = {
+    searchStartTime.current = performance.now();
+    lastQuery.current = query;
+  }, [enableTracking]);
+
+  const completeSearch = useCallback((
+    query: string, 
+    resultsCount: number, 
+    searchType: SearchAnalytics['searchType'] = 'instant'
+  ) => {
+    if (!enableTracking || !searchStartTime.current) return;
+
+    const searchTime = performance.now() - searchStartTime.current;
+    const analytics: SearchAnalytics = {
       query,
-      resultCount,
-      timestamp: Date.now(),
-      duration,
-      searchType,
-      userId,
+      resultsCount,
+      searchTime,
+      timestamp: new Date(),
+      searchType
     };
 
-    this.events.push(event);
-    this.searchStartTime.delete(key);
-
-    // In production, send to analytics service
-    if (process.env.NODE_ENV === 'production') {
-      this.sendToAnalytics(event);
-    } else {
-      console.log('Search Analytics:', event);
+    // Log to console in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 Search Analytics:', {
+        query,
+        resultsCount,
+        searchTime: `${searchTime.toFixed(2)}ms`,
+        searchType
+      });
     }
-  }
 
-  trackEmptySearch(query: string, searchType: string, userId?: string) {
-    this.trackSearch(query, 0, searchType, userId);
-  }
+    // Call callback if provided
+    onSearchComplete?.(analytics);
 
-  getPopularSearches(limit: number = 10): { query: string; count: number }[] {
-    const searchCounts = new Map<string, number>();
-    
-    this.events.forEach(event => {
-      const count = searchCounts.get(event.query) || 0;
-      searchCounts.set(event.query, count + 1);
-    });
+    // Reset timer
+    searchStartTime.current = null;
+  }, [enableTracking, onSearchComplete]);
 
-    return Array.from(searchCounts.entries())
-      .map(([query, count]) => ({ query, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, limit);
-  }
+  const trackSuggestionClick = useCallback((suggestion: string, originalQuery: string) => {
+    if (!enableTracking) return;
 
-  getAverageSearchTime(): number {
-    const eventsWithDuration = this.events.filter(e => e.duration !== undefined);
-    if (eventsWithDuration.length === 0) return 0;
-    
-    const totalDuration = eventsWithDuration.reduce((sum, e) => sum + e.duration!, 0);
-    return totalDuration / eventsWithDuration.length;
-  }
+    const analytics: SearchAnalytics = {
+      query: suggestion,
+      resultsCount: 0, // Will be updated when search completes
+      searchTime: 0,
+      timestamp: new Date(),
+      searchType: 'suggestion'
+    };
 
-  private async sendToAnalytics(event: SearchAnalyticsEvent) {
-    // Implement actual analytics service integration
-    // Example: Google Analytics, Mixpanel, Amplitude, etc.
-    try {
-      // await fetch('/api/analytics/search', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(event),
-      // });
-    } catch (error) {
-      console.error('Failed to send search analytics:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('💡 Suggestion Clicked:', {
+        originalQuery,
+        selectedSuggestion: suggestion
+      });
     }
-  }
-}
 
-// Singleton instance
-const analytics = new SearchAnalytics();
-
-export function useSearchAnalytics() {
-  const trackSearchStart = useCallback((query: string, searchType: string) => {
-    analytics.startSearch(query, searchType);
-  }, []);
-
-  const trackSearchComplete = useCallback(
-    (query: string, resultCount: number, searchType: string, userId?: string) => {
-      analytics.trackSearch(query, resultCount, searchType, userId);
-    },
-    []
-  );
-
-  const trackEmptySearch = useCallback(
-    (query: string, searchType: string, userId?: string) => {
-      analytics.trackEmptySearch(query, searchType, userId);
-    },
-    []
-  );
-
-  const getPopularSearches = useCallback((limit?: number) => {
-    return analytics.getPopularSearches(limit);
-  }, []);
-
-  const getAverageSearchTime = useCallback(() => {
-    return analytics.getAverageSearchTime();
-  }, []);
+    onSearchComplete?.(analytics);
+  }, [enableTracking, onSearchComplete]);
 
   return {
-    trackSearchStart,
-    trackSearchComplete,
-    trackEmptySearch,
-    getPopularSearches,
-    getAverageSearchTime,
+    startSearch,
+    completeSearch,
+    trackSuggestionClick
   };
 }

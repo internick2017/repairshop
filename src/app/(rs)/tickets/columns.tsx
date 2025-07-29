@@ -24,6 +24,22 @@ export interface Ticket {
   } | null
 }
 
+// Helper function to highlight search terms
+function highlightText(text: string, searchTerm: string) {
+  if (!searchTerm || !text) return text;
+  
+  const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  const parts = text.split(regex);
+  
+  return parts.map((part, index) => 
+    regex.test(part) ? (
+      <mark key={index} className="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">
+        {part}
+      </mark>
+    ) : part
+  );
+}
+
 export const columns: ColumnDef<Ticket>[] = [
   {
     id: "select",
@@ -101,16 +117,18 @@ export const columns: ColumnDef<Ticket>[] = [
         </Button>
       )
     },
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
       const ticket = row.original
+      const globalFilter = table.getState().globalFilter as string || '';
+      
       return (
         <div className="flex items-center gap-2">
           <div className="max-w-[200px]">
             <div className="text-sm font-medium truncate">
-              {ticket.title}
+              {globalFilter ? highlightText(ticket.title, globalFilter) : ticket.title}
             </div>
             <div className="text-xs text-muted-foreground truncate">
-              {ticket.description}
+              {globalFilter ? highlightText(ticket.description, globalFilter) : ticket.description}
             </div>
           </div>
         </div>
@@ -139,16 +157,20 @@ export const columns: ColumnDef<Ticket>[] = [
         </Button>
       )
     },
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
       const ticket = row.original
       const isUnassigned = ticket.tech === "unassigned"
+      const globalFilter = table.getState().globalFilter as string || '';
       
       return (
         <div className="flex items-center gap-2">
           <Wrench className={`h-4 w-4 ${isUnassigned ? 'text-muted-foreground' : 'text-blue-600'}`} />
           <div className="flex flex-col">
             <span className={`text-sm ${isUnassigned ? 'text-muted-foreground italic' : 'font-medium'}`}>
-              {isUnassigned ? "Unassigned" : ticket.tech}
+              {isUnassigned 
+                ? "Unassigned" 
+                : (globalFilter ? highlightText(ticket.tech, globalFilter) : ticket.tech)
+              }
             </span>
             {ticket.kindeUserId && !isUnassigned && (
               <span className="text-xs text-muted-foreground">
@@ -168,17 +190,25 @@ export const columns: ColumnDef<Ticket>[] = [
   {
     accessorKey: "customer",
     header: "Customer",
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
       const ticket = row.original
+      const globalFilter = table.getState().globalFilter as string || '';
+      
       return ticket.customer ? (
         <div className="flex items-center gap-2">
           <User className="h-4 w-4 text-muted-foreground" />
           <div>
             <div className="text-sm font-medium">
-              {ticket.customer.firstName} {ticket.customer.lastName}
+              {globalFilter 
+                ? highlightText(`${ticket.customer.firstName} ${ticket.customer.lastName}`, globalFilter)
+                : `${ticket.customer.firstName} ${ticket.customer.lastName}`
+              }
             </div>
             <div className="text-xs text-muted-foreground">
-              {ticket.customer.email}
+              {globalFilter 
+                ? highlightText(ticket.customer.email, globalFilter)
+                : ticket.customer.email
+              }
             </div>
           </div>
         </div>
