@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Metadata } from 'next'
 import { ImageWithFallback } from '@/components/ui/image-fallback'
 import { HomeIcon, SearchIcon, ArrowLeftIcon } from 'lucide-react'
+import { BackButton } from '@/components/BackButton'
 
 export const metadata: Metadata = {
   title: '404 - Page Not Found',
@@ -57,14 +58,7 @@ export default function NotFound() {
               </Button>
             </Link>
             
-            <Button 
-              variant="outline" 
-              onClick={() => window.history.back()}
-              className="border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 px-6 py-3"
-            >
-              <ArrowLeftIcon className="w-5 h-5 mr-2" />
-              Go Back
-            </Button>
+            <BackButton />
           </div>
           
           {/* Help Links */}

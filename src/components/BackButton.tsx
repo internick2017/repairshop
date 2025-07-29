@@ -1,67 +1,17 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { Button } from '@/components/ui/button'
+import { ArrowLeftIcon } from 'lucide-react'
 
-interface BackButtonProps {
-    href?: string;
-    label?: string;
-    className?: string;
-}
-
-export function BackButton({ 
-    href, 
-    label = "Back", 
-    className = "" 
-}: BackButtonProps) {
-    const router = useRouter();
-
-    // If no href is provided, use router.back()
-    const handleClick = href 
-        ? undefined 
-        : (e: React.MouseEvent) => {
-            e.preventDefault();
-            router.back();
-        };
-
-    // If href is provided, render as Link, otherwise render as button
-    if (href) {
-        return (
-            <Link 
-                href={href} 
-                className={`
-                    inline-flex items-center gap-2 
-                    text-gray-600 hover:text-gray-800 
-                    dark:text-gray-300 dark:hover:text-gray-100 
-                    transition-colors duration-200 
-                    focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md px-2 py-1
-                    ${className}
-                `}
-                aria-label={`${label} to previous page`}
-            >
-                <ChevronLeft className="w-5 h-5" aria-hidden="true" />
-                <span className="text-sm font-medium">{label}</span>
-            </Link>
-        );
-    }
-
-    return (
-        <button 
-            type="button"
-            onClick={handleClick}
-            className={`
-                inline-flex items-center gap-2 
-                text-gray-600 hover:text-gray-800 
-                dark:text-gray-300 dark:hover:text-gray-100 
-                transition-colors duration-200 
-                focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-md px-2 py-1
-                ${className}
-            `}
-            aria-label={`${label} to previous page`}
-        >
-            <ChevronLeft className="w-5 h-5" aria-hidden="true" />
-            <span className="text-sm font-medium">{label}</span>
-        </button>
-    );
+export function BackButton() {
+  return (
+    <Button 
+      variant="outline" 
+      onClick={() => window.history.back()}
+      className="border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 px-6 py-3"
+    >
+      <ArrowLeftIcon className="w-5 h-5 mr-2" />
+      Go Back
+    </Button>
+  )
 } 
