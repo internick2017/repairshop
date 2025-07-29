@@ -8,6 +8,7 @@ import { tickets, customers } from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { sanitizeFormData } from "@/lib/sanitization";
+import { getUserByEmail } from "@/lib/utils/tech-assignment";
 
 // Schema for updating tickets (all fields optional except id)
 const ticketUpdateSchema = ticketInsertSchema.partial().extend({
@@ -46,6 +47,21 @@ const toggleTicketStatusSchema = z.object({
   id: z.number().positive("Valid ticket ID is required"),
 });
 
+// Helper function to get Kinde user ID from email
+async function getKindeUserIdFromEmail(email: string): Promise<string | undefined> {
+  if (email === "unassigned") {
+    return undefined;
+  }
+  
+  try {
+    const user = await getUserByEmail(email);
+    return user?.id;
+  } catch (error) {
+    console.error('Error getting Kinde user ID from email:', error);
+    return undefined;
+  }
+}
+
 // Create ticket action
 export const createTicket = action
   .inputSchema(ticketInsertSchema)
@@ -68,6 +84,14 @@ export const createTicket = action
     
     // Sanitize input data before inserting
     const sanitizedData = sanitizeFormData(insertData);
+    
+    // Get Kinde user ID if tech is assigned
+    if (sanitizedData.tech && sanitizedData.tech !== "unassigned") {
+      const kindeUserId = await getKindeUserIdFromEmail(sanitizedData.tech);
+      if (kindeUserId) {
+        sanitizedData.kindeUserId = kindeUserId;
+      }
+    }
     
     const [newTicket] = await db
       .insert(tickets)
@@ -95,6 +119,16 @@ export const updateTicket = action
     
     // Sanitize update data
     const sanitizedData = sanitizeFormData(updateData);
+    
+    // Get Kinde user ID if tech is being updated
+    if (sanitizedData.tech && sanitizedData.tech !== "unassigned") {
+      const kindeUserId = await getKindeUserIdFromEmail(sanitizedData.tech);
+      if (kindeUserId) {
+        sanitizedData.kindeUserId = kindeUserId;
+      }
+    } else if (sanitizedData.tech === "unassigned") {
+      sanitizedData.kindeUserId = null;
+    }
     
     const [updatedTicket] = await db
       .update(tickets)
@@ -251,10 +285,17 @@ export const assignTicket = action
   try {
     const { id, tech } = parsedInput;
     
+    // Get Kinde user ID if tech is being assigned
+    let kindeUserId: string | null = null;
+    if (tech !== "unassigned") {
+      kindeUserId = await getKindeUserIdFromEmail(tech) || null;
+    }
+    
     const [updatedTicket] = await db
       .update(tickets)
       .set({
         tech,
+        kindeUserId,
         updatedAt: new Date(),
       })
       .where(eq(tickets.id, id))

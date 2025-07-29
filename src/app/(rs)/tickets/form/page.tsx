@@ -7,25 +7,16 @@ import * as Sentry from "@sentry/nextjs";
 import { TicketForm } from "./TicketForm";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { redirect } from "next/navigation";
-import { Users, init as kindeInit } from "@kinde/management-api-js";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Suspense } from "react";
 import { FormSkeleton } from "@/components/FormSkeleton";
+import { fetchKindeUsers, type TechUser } from "@/lib/utils/tech-assignment";
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
 type Customer = InferSelectModel<typeof customers>;
 type Ticket = InferSelectModel<typeof tickets>;
-
-interface KindeUser {
-    id?: string;
-    email?: string;
-    first_name?: string;
-    last_name?: string;
-    full_name?: string;
-    is_suspended?: boolean;
-}
 
 interface User {
     id: string;
@@ -118,27 +109,15 @@ export default async function TicketFormPage({ searchParams }: TicketFormPagePro
         // Fetch all users from Kinde Management API for managers
         if (isManager) {
             try {
-                // Ensure the domain has the https:// protocol
-                const kindeDomain = process.env.KINDE_DOMAIN!.startsWith('http') 
-                    ? process.env.KINDE_DOMAIN! 
-                    : `https://${process.env.KINDE_DOMAIN!}`;
-
-                await kindeInit({
-                    kindeDomain: kindeDomain,
-                    clientId: process.env.KINDE_MANAGEMENT_CLIENT_ID!,
-                    clientSecret: process.env.KINDE_MANAGEMENT_CLIENT_SECRET!
-                });
-                
-                const usersResponse = await Users.getUsers();
-        
-                users = usersResponse?.users?.map((kindeUser: KindeUser) => ({
-                    id: kindeUser.id || '',
-                    email: kindeUser.email || '',
-                    firstName: kindeUser.first_name,
-                    lastName: kindeUser.last_name,
-                    fullName: kindeUser.full_name || kindeUser.email || '',
-                    isActive: kindeUser.is_suspended === false
-                })).filter(user => user.id && user.email) || [];
+                const techUsers = await fetchKindeUsers();
+                users = techUsers.map((techUser: TechUser) => ({
+                    id: techUser.id,
+                    email: techUser.email,
+                    firstName: techUser.firstName,
+                    lastName: techUser.lastName,
+                    fullName: techUser.fullName,
+                    isActive: techUser.isActive,
+                }));
             } catch (error) {
                 console.error('Error fetching users from Kinde:', error);
                 // Fallback to current user only

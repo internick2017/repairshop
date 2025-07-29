@@ -29,12 +29,14 @@ export const tickets = pgTable("tickets", {
     description: text("description").notNull(),
     completed: boolean("completed").notNull().default(false),
     tech: varchar("tech", { length: 255 }).notNull().default("unassigned"),
+    kindeUserId: varchar("kinde_user_id", { length: 255 }), // Store Kinde user ID for better integration
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
 }, (table) => ({
     customerIdIdx: index("tickets_customer_id_idx").on(table.customerId),
     completedIdx: index("tickets_completed_idx").on(table.completed),
     techIdx: index("tickets_tech_idx").on(table.tech),
+    kindeUserIdIdx: index("tickets_kinde_user_id_idx").on(table.kindeUserId),
 }));
 
 // User permissions table for storing user roles and permissions

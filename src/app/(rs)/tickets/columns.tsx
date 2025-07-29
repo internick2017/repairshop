@@ -13,6 +13,7 @@ export interface Ticket {
   description: string
   completed: boolean
   tech: string
+  kindeUserId?: string | null
   createdAt: Date
   updatedAt: Date
   customerId: number
@@ -103,10 +104,14 @@ export const columns: ColumnDef<Ticket>[] = [
     cell: ({ row }) => {
       const ticket = row.original
       return (
-        <div>
-          <div className="font-medium">{ticket.title}</div>
-          <div className="text-sm text-muted-foreground line-clamp-1">
-            {ticket.description}
+        <div className="flex items-center gap-2">
+          <div className="max-w-[200px]">
+            <div className="text-sm font-medium truncate">
+              {ticket.title}
+            </div>
+            <div className="text-xs text-muted-foreground truncate">
+              {ticket.description}
+            </div>
           </div>
         </div>
       )
@@ -123,7 +128,7 @@ export const columns: ColumnDef<Ticket>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="hover:bg-accent"
         >
-          Tech
+          Assigned Tech
           {sorted === "asc" ? (
             <ArrowUp className="ml-2 h-4 w-4" />
           ) : sorted === "desc" ? (
@@ -136,10 +141,21 @@ export const columns: ColumnDef<Ticket>[] = [
     },
     cell: ({ row }) => {
       const ticket = row.original
+      const isUnassigned = ticket.tech === "unassigned"
+      
       return (
         <div className="flex items-center gap-2">
-          <Wrench className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm">{ticket.tech}</span>
+          <Wrench className={`h-4 w-4 ${isUnassigned ? 'text-muted-foreground' : 'text-blue-600'}`} />
+          <div className="flex flex-col">
+            <span className={`text-sm ${isUnassigned ? 'text-muted-foreground italic' : 'font-medium'}`}>
+              {isUnassigned ? "Unassigned" : ticket.tech}
+            </span>
+            {ticket.kindeUserId && !isUnassigned && (
+              <span className="text-xs text-muted-foreground">
+                ID: {ticket.kindeUserId.slice(0, 8)}...
+              </span>
+            )}
+          </div>
         </div>
       )
     },
@@ -207,16 +223,15 @@ export const columns: ColumnDef<Ticket>[] = [
       }
 
       return (
-        <Badge className={getStatusColor(ticket.completed)} variant="secondary">
-          {getStatusText(ticket.completed)}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <CheckCircle className={`h-4 w-4 ${ticket.completed ? 'text-green-600' : 'text-yellow-600'}`} />
+          <Badge className={getStatusColor(ticket.completed)}>
+            {getStatusText(ticket.completed)}
+          </Badge>
+        </div>
       )
     },
-    filterFn: (row, id, value) => {
-      // Convert string filter values to boolean for comparison
-      const isCompleted = row.getValue(id) as boolean;
-      return value.includes(isCompleted.toString());
-    },
+    enableGlobalFilter: true,
   },
   {
     accessorKey: "createdAt",
@@ -244,106 +259,12 @@ export const columns: ColumnDef<Ticket>[] = [
       return (
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm">
+          <div className="text-sm">
             {new Date(ticket.createdAt).toLocaleDateString()}
-          </span>
+          </div>
         </div>
       )
     },
-    filterFn: (row, id, value) => {
-      if (!value || !Array.isArray(value)) return true
-      
-      const cellValue = row.getValue(id)
-      if (!cellValue || typeof cellValue === 'object' && Object.keys(cellValue).length === 0) return true
-      
-      const date = new Date(cellValue as string | number | Date)
-      if (isNaN(date.getTime())) return true
-      
-      const [start, end] = value
-      
-      if (!start && !end) return true
-      
-      if (start && !end) {
-        const startDate = new Date(start)
-        return isNaN(startDate.getTime()) ? true : date >= startDate
-      }
-      
-      if (!start && end) {
-        const endDate = new Date(end)
-        return isNaN(endDate.getTime()) ? true : date <= endDate
-      }
-      
-      const startDate = new Date(start)
-      const endDate = new Date(end)
-      
-      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return true
-      
-      return date >= startDate && date <= endDate
-    },
-  },
-  {
-    accessorKey: "updatedAt",
-    header: ({ column }) => {
-      const sorted = column.getIsSorted();
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="hover:bg-accent"
-        >
-          Updated
-          {sorted === "asc" ? (
-            <ArrowUp className="ml-2 h-4 w-4" />
-          ) : sorted === "desc" ? (
-            <ArrowDown className="ml-2 h-4 w-4" />
-          ) : (
-            <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
-          )}
-        </Button>
-      )
-    },
-    cell: ({ row }) => {
-      const ticket = row.original
-      return (
-        <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm">
-            {new Date(ticket.updatedAt).toLocaleDateString()}
-          </span>
-        </div>
-      )
-    },
-    filterFn: (row, id, value) => {
-      if (!value || !Array.isArray(value)) return true
-      
-      const cellValue = row.getValue(id)
-      if (!cellValue || typeof cellValue === 'object' && Object.keys(cellValue).length === 0) return true
-      
-      const date = new Date(cellValue as string | number | Date)
-      if (isNaN(date.getTime())) return true
-      
-      const [start, end] = value
-      
-      if (!start && !end) return true
-      
-      if (start && !end) {
-        const startDate = new Date(start)
-        return isNaN(startDate.getTime()) ? true : date >= startDate
-      }
-      
-      if (!start && end) {
-        const endDate = new Date(end)
-        return isNaN(endDate.getTime()) ? true : date <= endDate
-      }
-      
-      const startDate = new Date(start)
-      const endDate = new Date(end)
-      
-      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return true
-      
-      return date >= startDate && date <= endDate
-    },
-    enableHiding: true, // Allow hiding this column by default
   },
   {
     id: "actions",
@@ -352,18 +273,20 @@ export const columns: ColumnDef<Ticket>[] = [
       const ticket = row.original
       return (
         <div className="flex items-center gap-2">
-          <Link href={`/tickets/form?ticketId=${ticket.id}`}>
-            <Button variant="ghost" size="sm">
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+          >
+            <Link href={`/tickets/form?ticketId=${ticket.id}`}>
               <Edit className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Link href={`/tickets/form?ticketId=${ticket.id}`}>
-            <Button variant="ghost" size="sm">
-              <CheckCircle className="h-4 w-4" />
-            </Button>
-          </Link>
+              <span className="sr-only">Edit ticket</span>
+            </Link>
+          </Button>
         </div>
       )
     },
+    enableSorting: false,
+    enableHiding: false,
   },
 ] 

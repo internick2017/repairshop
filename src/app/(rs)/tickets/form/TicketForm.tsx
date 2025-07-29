@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { createTicket, updateTicket } from "@/lib/actions";
 import { useSafeAction } from "@/lib/hooks/use-safe-action";
 import { User } from "@/types";
+import { createTechOptions, getTechDisplayName, type TechUser } from "@/lib/utils/tech-assignment";
 
 type TicketFormProps = {
     customer: SelectCustomerSchema;
@@ -30,7 +31,7 @@ type TicketFormProps = {
 
 export function TicketForm({ customer, ticket, users, isManager, currentUser, canEdit }: TicketFormProps) {
     const router = useRouter();
-    const [techOptions, setTechOptions] = useState<{ value: string; label: string }[]>([]);
+    const [techOptions, setTechOptions] = useState<{ value: string; label: string; data?: TechUser }[]>([]);
 
     // Safe Actions hooks
     const { execute: executeCreate, isLoading: isCreating } = useSafeAction(createTicket, {
@@ -53,24 +54,38 @@ export function TicketForm({ customer, ticket, users, isManager, currentUser, ca
 
     // Prepare tech options based on user permissions
     useEffect(() => {
-        let options = [{ value: "unassigned", label: "Unassigned" }];
+        // Convert users to TechUser format
+        const techUsers: TechUser[] = users.map(user => ({
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            fullName: user.fullName,
+            isActive: user.isActive,
+        }));
+
+        let options = createTechOptions(techUsers);
         
-        if (isManager && users.length > 0) {
-            // Managers can assign any employee
-            options = [
-                ...options,
-                ...users.map(user => ({
-                    value: user.email,
-                    label: user.fullName
-                }))
-            ];
-        } else if (!isManager && ticket) {
+        if (!isManager && ticket) {
             // Regular employees can only see themselves for tickets assigned to them
             if (currentUser && currentUser.email) {
-                options.push({
-                    value: currentUser.email,
-                    label: `${currentUser.given_name || ''} ${currentUser.family_name || ''}`.trim() || currentUser.email
-                });
+                const currentUserTech: TechUser = {
+                    id: currentUser.id || currentUser.email,
+                    email: currentUser.email,
+                    firstName: currentUser.given_name,
+                    lastName: currentUser.family_name,
+                    fullName: `${currentUser.given_name || ''} ${currentUser.family_name || ''}`.trim() || currentUser.email,
+                    isActive: true,
+                };
+                
+                options = [
+                    { value: "unassigned", label: "Unassigned" },
+                    {
+                        value: currentUser.email,
+                        label: currentUserTech.fullName,
+                        data: currentUserTech
+                    }
+                ];
             }
         }
         
@@ -83,6 +98,7 @@ export function TicketForm({ customer, ticket, users, isManager, currentUser, ca
         description: ticket.description,
         completed: ticket.completed ?? false,
         tech: ticket.tech,
+        kindeUserId: ticket.kindeUserId,
         customerId: customer.id,
     } : {
         id: "new",
@@ -91,6 +107,7 @@ export function TicketForm({ customer, ticket, users, isManager, currentUser, ca
         description: "",
         completed: false,
         tech: currentUser?.email || "unassigned", // Default to current user for managers
+        kindeUserId: undefined,
     };
 
     const form = useForm<z.infer<typeof ticketInsertSchema>>({
@@ -117,6 +134,17 @@ export function TicketForm({ customer, ticket, users, isManager, currentUser, ca
         form.reset();
         setStatusText(defaultValues.completed ? "Completed" : "Pending");
     };
+
+    // Get current tech display name
+    const currentTechEmail = form.watch("tech");
+    const currentTechDisplayName = getTechDisplayName(currentTechEmail, users.map(user => ({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        fullName: user.fullName,
+        isActive: user.isActive,
+    })));
 
     return (
         <div className="max-w-6xl mx-auto bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800">
@@ -169,7 +197,7 @@ export function TicketForm({ customer, ticket, users, isManager, currentUser, ca
                                         </label>
                                         <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                                             <span className="text-gray-900 dark:text-gray-100">
-                                                {ticket?.tech || "Unassigned"}
+                                                {currentTechDisplayName}
                                             </span>
                                         </div>
                                         <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -204,103 +232,86 @@ export function TicketForm({ customer, ticket, users, isManager, currentUser, ca
                                             {customer.city}, {customer.state} {customer.zip}
                                         </p>
                                         <p className="text-gray-600 dark:text-gray-400">
-                                            {customer.email}
+                                            {customer.country}
                                         </p>
                                         <p className="text-gray-600 dark:text-gray-400">
-                                            Phone: {customer.phone}
+                                            📧 {customer.email}
+                                        </p>
+                                        <p className="text-gray-600 dark:text-gray-400">
+                                            📞 {customer.phone}
                                         </p>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        {/* Right Column - Description */}
+                        
+                        {/* Right Column - Description and Status */}
                         <div className="space-y-6">
-                            <div className="space-y-4">
-                                <TextareaWithLabel<InsertTicketSchema>
-                                    fieldTitle="Description"
-                                    nameInSchema="description"
-                                    required={true}
-                                    placeholder="Detailed description of the problem, steps to reproduce, and any relevant information..."
-                                    rows={12}
-                                    className="space-y-3"
-                                    disabled={!canEdit}
-                                />
-                            </div>
+                            <TextareaWithLabel<InsertTicketSchema>
+                                fieldTitle="Description"
+                                nameInSchema="description"
+                                required={true}
+                                placeholder="Detailed description of the issue..."
+                                className="space-y-3"
+                                disabled={!canEdit}
+                                rows={8}
+                            />
                             
-                            {/* Status Section */}
-                            <div className="space-y-4">
-                                <div className="border-b border-gray-200 dark:border-gray-700 pb-2">
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                        Status
-                                    </h3>
-                                </div>
-                                
-                                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                            Current Status:
-                                        </span>
-                                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                            statusText === "Completed" 
-                                                ? "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
-                                                : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400"
-                                        }`}>
-                                            {statusText}
-                                        </span>
-                                    </div>
-                                    
-                                    <CheckboxWithLabel<InsertTicketSchema>
-                                        fieldTitle="Ticket Completed"
-                                        nameInSchema="completed"
-                                        required={false}
-                                        description="Mark this ticket as completed when the work is finished"
-                                        className="space-y-3"
-                                        disabled={!canEdit}
-                                        onValueChange={(checked) => {
-                                            setStatusText(checked ? "Completed" : "Pending");
-                                        }}
-                                    />
+                            <CheckboxWithLabel<InsertTicketSchema>
+                                fieldTitle="Completed"
+                                nameInSchema="completed"
+                                className="space-y-3"
+                                disabled={!canEdit}
+                                onChange={(checked) => setStatusText(checked ? "Completed" : "Pending")}
+                            />
+                            
+                            {/* Status Indicator */}
+                            <div className="space-y-3">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Status
+                                </label>
+                                <div className={`p-3 rounded-lg border ${
+                                    statusText === "Completed" 
+                                        ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800" 
+                                        : "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800"
+                                }`}>
+                                    <span className={`font-medium ${
+                                        statusText === "Completed" 
+                                            ? "text-green-800 dark:text-green-200" 
+                                            : "text-yellow-800 dark:text-yellow-200"
+                                    }`}>
+                                        {statusText}
+                                    </span>
                                 </div>
                             </div>
                         </div>
                     </div>
-
+                    
                     {/* Form Actions */}
-                    {canEdit ? (
-                        <div className="flex flex-col sm:flex-row gap-4 pt-6 mt-8 border-t border-gray-200 dark:border-gray-800">
-                            <Button 
-                                type="submit" 
-                                disabled={isSubmitting}
-                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50"
-                            >
-                                {isSubmitting ? "Saving..." : (ticket ? "Update Ticket" : "Create Ticket")}
-                            </Button>
-                            <Button 
-                                type="button" 
-                                variant="outline" 
-                                disabled={isSubmitting}
-                                className="flex-1 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50"
-                                onClick={handleReset}
-                            >
-                                Reset Form
-                            </Button>
-                        </div>
-                    ) : (
-                        <div className="pt-6 mt-8 border-t border-gray-200 dark:border-gray-800">
-                            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                                <p className="text-yellow-800 dark:text-yellow-200 text-sm">
-                                    <strong>Read-only mode:</strong> You can view this ticket but cannot make changes. 
-                                    {!isManager && ticket && ticket.tech !== currentUser?.email && (
-                                        <span> This ticket is assigned to another technician.</span>
-                                    )}
-                                    {!isManager && !ticket && (
-                                        <span> Only managers can create new tickets.</span>
-                                    )}
-                                </p>
-                            </div>
-                        </div>
-                    )}
+                    <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-800">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleReset}
+                            disabled={isSubmitting}
+                        >
+                            Reset
+                        </Button>
+                        <Button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                            {isSubmitting ? (
+                                <div className="flex items-center space-x-2">
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    <span>{ticket ? "Updating..." : "Creating..."}</span>
+                                </div>
+                            ) : (
+                                <span>{ticket ? "Update Ticket" : "Create Ticket"}</span>
+                            )}
+                        </Button>
+                    </div>
                 </form>
             </Form>
         </div>

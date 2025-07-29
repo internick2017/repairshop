@@ -8,7 +8,11 @@ export const ticketInsertSchema = createInsertSchema(tickets, {
     title: () => z.string().min(1, { message: "Title is required" }),
     description: () => z.string().min(1, { message: "Description is required" }),
     completed: () => z.boolean(),
-    tech: () => z.email({ message: "Invalid email address" }),
+    tech: () => z.union([
+        z.literal("unassigned"),
+        z.string().email({ message: "Invalid email address" })
+    ]),
+    kindeUserId: () => z.string().optional(),
 });
 
 
