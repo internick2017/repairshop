@@ -51,3 +51,25 @@ next-env.d.ts
 .cursorrules
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Screenshot generation scripts (temporary files)
+screenshot*.js
+create-screenshots*.js
+create-showcase*.js
+*-screenshot.js
+*-auth.js
+*-dev.js
+*-bypass.js
+
+# Temporary screenshot files
+public/images/*-dev.png
+public/images/*-screenshot.png
+public/images/*-auth.png
+public/images/*-error.png
+public/images/*-login-redirect.png
+public/images/*-auth-page.png
+public/images/*-error-page.png
+public/images/back-home.png
+
+# Keep only the good mock screenshots
+!public/images/*-mock.png

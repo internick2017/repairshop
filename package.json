@@ -65,6 +65,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.54.1",
     "@testing-library/jest-dom": "^6",
     "@testing-library/react": "^14",
     "@types/node": "^20",
