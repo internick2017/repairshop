@@ -7,6 +7,7 @@ import { useTheme } from "next-themes";
 import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
 import { LogoutLink, useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { NotificationBell } from "./notifications/NotificationSystem";
 
 export function Header() {
     const { theme, setTheme } = useTheme();
@@ -34,7 +35,7 @@ export function Header() {
                 className="flex items-center justify-between w-full px-8 py-4">
                 <div className="flex items-center gap-3">
                     <Link
-                        href="/tickets"
+                        href="/dashboard"
                         className="flex items-center gap-3 ml-0 group"
                         title="Home"
                     >
@@ -66,6 +67,8 @@ export function Header() {
                             {theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
                         </span>
                     </Button>
+                    
+                    <NotificationBell />
                     
                     <div className="flex items-center gap-2 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 px-4 py-2 mx-4 rounded-xl shadow-sm">
                         <NavButton Icon={File} href="/tickets" label="Tickets" />

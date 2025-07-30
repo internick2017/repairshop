@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/toast'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { SentryUserProvider } from '@/components/SentryUserProvider'
+import { NotificationProvider } from '@/components/notifications/NotificationSystem'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -63,11 +64,13 @@ export default function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
-              <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Header will be added to authenticated routes via their specific layouts */}
-                {children}
-              </div>
-              <Toaster />
+              <NotificationProvider>
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                  {/* Header will be added to authenticated routes via their specific layouts */}
+                  {children}
+                </div>
+                <Toaster />
+              </NotificationProvider>
             </ThemeProvider>
           </SentryUserProvider>
         </ErrorBoundary>

@@ -6,5 +6,5 @@ export const metadata: Metadata = {
 }
 
 export default function Home() {
-  redirect("/tickets");
+  redirect("/dashboard");
 }
