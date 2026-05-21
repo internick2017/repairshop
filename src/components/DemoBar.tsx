@@ -27,7 +27,7 @@ export function DemoBar() {
       <div className="flex items-center gap-3 flex-shrink-0">
         <span className="hidden sm:flex items-center gap-3 text-blue-100">
           <span>📧 demo@repairshop.com</span>
-          <span>🔑 demo1234</span>
+          <span>🔑 Demo@1234</span>
         </span>
         <LoginLink
           authUrlParams={{ login_hint: 'demo@repairshop.com' }}

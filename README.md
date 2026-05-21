@@ -30,7 +30,7 @@ The live deployment is pre-loaded with realistic demo data (25 customers, 40 tic
 | Field | Value |
 |-------|-------|
 | Email | `demo@repairshop.com` |
-| Password | `demo1234` |
+| Password | `Demo@1234` |
 
 Click **"Ver Demo →"** on the landing page — the login form will have the email pre-filled.
 
