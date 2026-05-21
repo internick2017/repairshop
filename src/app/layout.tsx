@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/toast'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { SentryUserProvider } from '@/components/SentryUserProvider'
 import { NotificationProvider } from '@/components/notifications/NotificationSystem'
+import { DemoBar } from '@/components/DemoBar'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -56,6 +57,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className}`}>
+        <DemoBar />
         <ErrorBoundary>
           <SentryUserProvider>
             <ThemeProvider
