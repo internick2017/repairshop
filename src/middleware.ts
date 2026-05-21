@@ -45,6 +45,6 @@ export const config = {
         * - homepage (represented by $ sign at the end of the path)
         * 
         */
-        "/((?!api|_next/static|_next/image|favicon.ico|login|robots.txt|images|$).*)",
+        "/((?!api|_next/static|_next/image|favicon.ico|login|robots.txt|images|demo|$).*)",
     ],
 }

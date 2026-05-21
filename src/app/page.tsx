@@ -1,4 +1,4 @@
-import { LoginLink } from '@kinde-oss/kinde-auth-nextjs/components'
+import Link from 'next/link'
 import { WrenchIcon, UsersIcon, TicketIcon, BarChart3Icon } from 'lucide-react'
 
 export default function Home() {
@@ -10,12 +10,12 @@ export default function Home() {
           <WrenchIcon className="w-5 h-5" />
           Francisco Repair Shop
         </div>
-        <LoginLink
-          authUrlParams={{ login_hint: 'demo@repairshop.com', connection_id: 'conn_01981ffad05500c459878e276a344b80' }}
+        <Link
+          href="/demo"
           className="rounded-md bg-[#1e40af] px-4 py-2 text-sm font-medium text-white hover:bg-blue-900 transition-colors"
         >
           Try Demo
-        </LoginLink>
+        </Link>
       </nav>
 
       {/* Hero */}
@@ -28,12 +28,12 @@ export default function Home() {
         <p className="text-xl text-slate-600 mb-8 max-w-xl mx-auto">
           Customer management, repair tickets, and analytics — all in one place.
         </p>
-        <LoginLink
-          authUrlParams={{ login_hint: 'demo@repairshop.com', connection_id: 'conn_01981ffad05500c459878e276a344b80' }}
+        <Link
+          href="/demo"
           className="inline-block rounded-lg bg-[#1e40af] px-8 py-4 text-lg font-semibold text-white hover:bg-blue-900 transition-colors shadow-lg"
         >
           Try Demo →
-        </LoginLink>
+        </Link>
       </section>
 
       {/* Stats bar */}
