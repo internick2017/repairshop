@@ -1,36 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Francisco Computer Repair Shop
 
-## Getting Started
+> A full-stack repair shop management system built with Next.js 15, Kinde Auth, and Neon DB.
 
-First, run the development server:
+![Next.js](https://img.shields.io/badge/Next.js_15-black?style=flat&logo=next.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat&logo=tailwind-css&logoColor=white)
+![Kinde](https://img.shields.io/badge/Kinde_Auth-FF5C00?style=flat)
+![Neon](https://img.shields.io/badge/Neon_DB-00E5B4?style=flat)
+![Drizzle](https://img.shields.io/badge/Drizzle_ORM-C5F74F?style=flat)
+![Sentry](https://img.shields.io/badge/Sentry-362D59?style=flat&logo=sentry&logoColor=white)
+
+**Live demo:** https://repairshop-puce.vercel.app/
+
+---
+
+## Features
+
+- **Customer Management** — Create, search, and manage customer profiles with full history
+- **Ticket Tracking** — Open, assign, and close repair tickets per customer
+- **Dashboard** — Live stats: open tickets, completed tickets, customer count
+- **Role-based Access** — Manager vs. Regular User permissions via Kinde
+- **Search** — Real-time search across customers and tickets
+- **Sentry Monitoring** — Error tracking and performance monitoring in production
+
+## Demo Account
+
+The live deployment is pre-loaded with realistic demo data (25 customers, 40 tickets).
+
+| Field | Value |
+|-------|-------|
+| Email | `demo@repairshop.com` |
+| Password | `demo1234` |
+
+Click **"Ver Demo →"** on the landing page — the login form will have the email pre-filled.
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 15 (App Router) |
+| Language | TypeScript |
+| Styling | Tailwind CSS + shadcn/ui |
+| Auth | Kinde Auth |
+| Database | Neon DB (PostgreSQL) |
+| ORM | Drizzle ORM |
+| Monitoring | Sentry |
+| Forms | React Hook Form + Zod |
+
+## Local Setup
+
+### 1. Clone and install
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/nick-granados/repairshop.git
+cd repairshop
+yarn install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configure environment variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create `.env.local` with:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+# Kinde Auth
+KINDE_CLIENT_ID=your_client_id
+KINDE_CLIENT_SECRET=your_client_secret
+KINDE_ISSUER_URL=https://your-domain.kinde.com
+KINDE_SITE_URL=http://localhost:3000
+KINDE_POST_LOGOUT_REDIRECT_URL=http://localhost:3000
+KINDE_POST_LOGIN_REDIRECT_URL=http://localhost:3000/dashboard
 
-## Learn More
+# Neon DB
+DATABASE_URL=your_neon_connection_string
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 3. Seed the database
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+yarn db:seed
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This clears existing data and inserts 25 customers + 40 tickets with realistic faker data.
 
-## Deploy on Vercel
+### 4. Run the dev server
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+yarn dev
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Open [http://localhost:3000](http://localhost:3000).
+
+---
+
+Built by [Nick Granados](https://nickgranados.com) — Full Stack Developer
