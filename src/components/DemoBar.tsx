@@ -28,10 +28,10 @@ export function DemoBar() {
       </span>
       <div className="flex items-center gap-3 flex-shrink-0">
         <Link
-          href="/demo"
+          href="/api/demo-login"
           className="rounded bg-white px-3 py-1 text-[#1e40af] font-semibold text-sm hover:bg-blue-50 transition-colors whitespace-nowrap"
         >
-          View Demo →
+          Try Demo →
         </Link>
         <button
           onClick={dismiss}
