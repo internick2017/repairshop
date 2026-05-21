@@ -38,7 +38,7 @@ export function DemoBar() {
         <button
           onClick={dismiss}
           aria-label="Cerrar banner de demo"
-          className="hover:opacity-70 transition-opacity ml-1"
+          className="hover:opacity-70 transition-opacity ml-1 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-1 focus:ring-offset-[#1e40af] rounded"
         >
           <XIcon className="w-4 h-4" />
         </button>
