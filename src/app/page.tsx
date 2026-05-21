@@ -14,25 +14,25 @@ export default function Home() {
           authUrlParams={{ login_hint: 'demo@repairshop.com' }}
           className="rounded-md bg-[#1e40af] px-4 py-2 text-sm font-medium text-white hover:bg-blue-900 transition-colors"
         >
-          Ver Demo
+          Try Demo
         </LoginLink>
       </nav>
 
       {/* Hero */}
       <section className="max-w-4xl mx-auto text-center px-6 py-20">
         <h1 className="text-5xl font-bold leading-tight mb-4">
-          Tu taller, perfectamente
+          Your shop, perfectly
           <br />
-          <span className="text-[#3b82f6]">organizado</span>
+          <span className="text-[#3b82f6]">organized</span>
         </h1>
         <p className="text-xl text-slate-600 mb-8 max-w-xl mx-auto">
-          Gestión de clientes, tickets de reparación y reportes — todo en un solo lugar.
+          Customer management, repair tickets, and analytics — all in one place.
         </p>
         <LoginLink
           authUrlParams={{ login_hint: 'demo@repairshop.com' }}
           className="inline-block rounded-lg bg-[#1e40af] px-8 py-4 text-lg font-semibold text-white hover:bg-blue-900 transition-colors shadow-lg"
         >
-          Ver Demo →
+          Try Demo →
         </LoginLink>
       </section>
 
@@ -41,7 +41,7 @@ export default function Home() {
         <div className="max-w-2xl mx-auto flex justify-center gap-16 text-center">
           <div>
             <div className="text-3xl font-bold text-[#1e40af]">25</div>
-            <div className="text-sm text-slate-500 mt-1">Clientes</div>
+            <div className="text-sm text-slate-500 mt-1">Customers</div>
           </div>
           <div>
             <div className="text-3xl font-bold text-[#1e40af]">40</div>
@@ -49,7 +49,7 @@ export default function Home() {
           </div>
           <div>
             <div className="text-3xl font-bold text-[#1e40af]">$4,820</div>
-            <div className="text-sm text-slate-500 mt-1">Revenue demo</div>
+            <div className="text-sm text-slate-500 mt-1">Demo Revenue</div>
           </div>
         </div>
       </div>
@@ -67,7 +67,7 @@ export default function Home() {
           <TicketIcon className="w-8 h-8 text-[#1e40af] mx-auto mb-3" />
           <h3 className="font-semibold text-lg mb-2">Ticket Tracking</h3>
           <p className="text-sm text-slate-500">
-            Assign, update, and close repair tickets with full audit trail.
+            Assign, update, and close repair tickets with a full audit trail.
           </p>
         </div>
         <div className="text-center p-6 rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -91,7 +91,7 @@ export default function Home() {
           </a>
         </p>
         <div className="flex justify-center flex-wrap gap-2">
-          <span className="bg-slate-100 px-2 py-0.5 rounded text-xs">Next.js 15</span>
+          <span className="bg-slate-100 px-2 py-0.5 rounded text-xs">Next.js 16</span>
           <span className="bg-slate-100 px-2 py-0.5 rounded text-xs">Kinde Auth</span>
           <span className="bg-slate-100 px-2 py-0.5 rounded text-xs">Neon DB</span>
           <span className="bg-slate-100 px-2 py-0.5 rounded text-xs">Drizzle ORM</span>
