@@ -3,16 +3,18 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { XIcon } from 'lucide-react'
+import { usePathname } from 'next/navigation'
 
 export function DemoBar() {
   const [visible, setVisible] = useState(false)
+  const pathname = usePathname()
 
   useEffect(() => {
     const dismissed = sessionStorage.getItem('demo-bar-dismissed')
     if (!dismissed) setVisible(true)
   }, [])
 
-  if (!visible) return null
+  if (!visible || pathname === '/demo') return null
 
   const dismiss = () => {
     sessionStorage.setItem('demo-bar-dismissed', '1')
