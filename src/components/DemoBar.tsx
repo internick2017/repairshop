@@ -30,7 +30,7 @@ export function DemoBar() {
           <span>🔑 Demo@1234</span>
         </span>
         <LoginLink
-          authUrlParams={{ login_hint: 'demo@repairshop.com' }}
+          authUrlParams={{ login_hint: 'demo@repairshop.com', connection_id: 'conn_01981ffad05500c459878e276a344b80' }}
           className="rounded bg-white px-3 py-1 text-[#1e40af] font-semibold text-sm hover:bg-blue-50 transition-colors whitespace-nowrap"
         >
           Try Demo →
