@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
+import bcrypt from 'bcryptjs'
+import { init as kindeInit, Users } from '@kinde/management-api-js'
 
 const DEMO_EMAIL = 'demo@repairshop.com'
 const DEMO_PASSWORD = 'Demo@1234'
@@ -25,15 +27,12 @@ function parseCookies(headers: Headers): string[] {
   return (headers.getSetCookie?.() ?? []).map((c) => c.split(';')[0])
 }
 
-function cookieHeader(jar: string[]) {
-  return jar.join('; ')
-}
-
 function mergeCookieJar(jar: string[], incoming: string[]): string[] {
   const map = new Map<string, string>()
   for (const c of [...jar, ...incoming]) {
-    const [k] = c.split('=')
-    map.set(k.trim(), c.trim())
+    const eq = c.indexOf('=')
+    const k = c.slice(0, eq).trim()
+    map.set(k, c.trim())
   }
   return Array.from(map.values())
 }
@@ -57,97 +56,58 @@ function extractFormAction(html: string, fallback: string, domain: string): stri
   return a.startsWith('http') ? a : `https://${domain}${a}`
 }
 
-async function followRedirects(
-  url: string,
-  jar: string[],
-  domain: string,
-  limit = 8
-): Promise<{ finalUrl: string; html: string; jar: string[] }> {
-  let current = url
-  for (let i = 0; i < limit; i++) {
-    const res = await fetch(current, {
-      redirect: 'manual',
-      headers: { 'User-Agent': 'Mozilla/5.0', Cookie: cookieHeader(jar) },
-    })
-    jar = mergeCookieJar(jar, parseCookies(res.headers))
-    if (res.status >= 300 && res.status < 400) {
-      const loc = res.headers.get('location') ?? ''
-      current = loc.startsWith('http') ? loc : `https://${domain}${loc}`
-    } else {
-      return { finalUrl: res.url || current, html: await res.text(), jar }
-    }
-  }
-  return { finalUrl: current, html: '', jar }
+async function setDemoPassword(domain: string, clientId: string, clientSecret: string): Promise<void> {
+  const userId = process.env.KINDE_DEMO_USER_ID
+  if (!userId) return
+
+  const kindeDomain = domain.startsWith('http') ? domain : `https://${domain}`
+  await kindeInit({ kindeDomain, clientId, clientSecret })
+
+  const hashed_password = await bcrypt.hash(DEMO_PASSWORD, 10)
+  await Users.setUserPassword({
+    userId,
+    requestBody: { hashed_password, hashing_method: 'bcrypt', is_temporary_password: false },
+  })
 }
 
 export async function GET(request: Request) {
   const domain = process.env.KINDE_DOMAIN
   const clientId = process.env.KINDE_CLIENT_ID
   const clientSecret = process.env.KINDE_CLIENT_SECRET
+  const mgmtClientId = process.env.KINDE_MANAGEMENT_CLIENT_ID
+  const mgmtClientSecret = process.env.KINDE_MANAGEMENT_CLIENT_SECRET
 
   if (!domain || !clientId || !clientSecret) {
     return NextResponse.redirect(new URL('/demo', request.url))
   }
 
   const origin = new URL(request.url).origin
-  // This redirect_uri must be added to Kinde → Applications → Allowed callback URLs
+  // ⚠️ Add this exact URL to Kinde → Applications → Allowed callback URLs
   const redirectUri = `${origin}/api/demo-login`
 
-  // ── Handle callback from Kinde (step 2 of the flow) ──────────────────────────
+  // ── Callback: Kinde redirected back with ?code= ────────────────────────────
   const url = new URL(request.url)
   const code = url.searchParams.get('code')
   const returnedState = url.searchParams.get('state')
-  const storedVerifier = request.headers.get('cookie')
-    ?.split(';').find((c) => c.trim().startsWith('_dv='))
-    ?.split('=')?.[1]
-  const storedState = request.headers.get('cookie')
-    ?.split(';').find((c) => c.trim().startsWith('_ds='))
-    ?.split('=')?.[1]
+  const cookies = request.headers.get('cookie') ?? ''
+  const storedVerifier = cookies.split(';').find((c) => c.trim().startsWith('_dv='))?.split('=')?.[1]
+  const storedState = cookies.split(';').find((c) => c.trim().startsWith('_ds='))?.split('=')?.[1]
 
   if (code && returnedState && storedVerifier && returnedState === storedState) {
-    const tokenRes = await fetch(`https://${domain}/oauth2/token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: redirectUri,
-        client_id: clientId,
-        client_secret: clientSecret,
-        code_verifier: storedVerifier,
-      }),
-    })
-
-    if (!tokenRes.ok) {
-      console.error('[demo-login] token exchange failed', await tokenRes.text())
-      return NextResponse.redirect(new URL('/demo', request.url))
-    }
-
-    const { access_token, id_token, refresh_token } = await tokenRes.json()
-    const accessPayload = decodeJwt(access_token)
-    const idPayload = decodeJwt(id_token)
-    const user = {
-      id: idPayload.sub,
-      email: idPayload.email,
-      given_name: idPayload.given_name,
-      family_name: idPayload.family_name,
-      picture: idPayload.picture ?? null,
-    }
-
-    const res = NextResponse.redirect(new URL('/dashboard', origin))
-    res.cookies.set('access_token', access_token, COOKIE_OPTS)
-    res.cookies.set('id_token', id_token, COOKIE_OPTS)
-    res.cookies.set('refresh_token', refresh_token, COOKIE_OPTS)
-    res.cookies.set('user', JSON.stringify(user), COOKIE_OPTS)
-    res.cookies.set('access_token_payload', JSON.stringify(accessPayload), COOKIE_OPTS)
-    res.cookies.set('id_token_payload', JSON.stringify(idPayload), COOKIE_OPTS)
-    // Clear PKCE temp cookies
-    res.cookies.set('_dv', '', { maxAge: 0, path: '/' })
-    res.cookies.set('_ds', '', { maxAge: 0, path: '/' })
-    return res
+    return exchangeAndLogin(code, storedVerifier, redirectUri, domain, clientId, clientSecret, origin, request)
   }
 
-  // ── Step 1: Initiate the OAuth flow + server-side form submission ─────────────
+  // ── Step 1: Set demo user password via Management API ─────────────────────
+  if (mgmtClientId && mgmtClientSecret && process.env.KINDE_DEMO_USER_ID) {
+    try {
+      await setDemoPassword(domain, mgmtClientId, mgmtClientSecret)
+    } catch (err) {
+      console.error('[demo-login] setUserPassword failed:', err)
+      // Non-fatal — continue with form simulation anyway
+    }
+  }
+
+  // ── Step 2: Generate PKCE + build auth URL ─────────────────────────────────
   const verifier = b64url(crypto.randomBytes(32))
   const challenge = b64url(crypto.createHash('sha256').update(verifier).digest())
   const state = b64url(crypto.randomBytes(16))
@@ -166,18 +126,44 @@ export async function GET(request: Request) {
       login_hint: DEMO_EMAIL,
     })
 
+  // ── Step 3: Server-side form simulation ───────────────────────────────────
   try {
     let jar: string[] = []
 
     // Follow Kinde's redirect chain to the login form
-    const { finalUrl, html, jar: jar2 } = await followRedirects(authUrl, jar, domain)
-    jar = jar2
+    let currentUrl = authUrl
+    let loginFormHtml = ''
+    let loginFormUrl = ''
 
-    const formUrl = extractFormAction(html, finalUrl, domain)
-    const hidden = extractHiddenFields(html)
+    for (let i = 0; i < 6; i++) {
+      const res = await fetch(currentUrl, {
+        redirect: 'manual',
+        headers: { 'User-Agent': 'Mozilla/5.0', Cookie: jar.join('; ') },
+      })
+      jar = mergeCookieJar(jar, parseCookies(res.headers))
 
-    // Build form body — Kinde uses 'p_email' and 'p_password' or 'email'/'password'
-    // We include both variants so it works regardless of Kinde version
+      if (res.status >= 300 && res.status < 400) {
+        const loc = res.headers.get('location') ?? ''
+        currentUrl = loc.startsWith('http') ? loc : `https://${domain}${loc}`
+
+        // If Kinde already redirected back to us with a code
+        if (currentUrl.includes('/api/demo-login') && new URL(currentUrl).searchParams.has('code')) {
+          const authCode = new URL(currentUrl).searchParams.get('code')!
+          return exchangeAndLogin(authCode, verifier, redirectUri, domain, clientId, clientSecret, origin, request)
+        }
+      } else {
+        loginFormHtml = await res.text()
+        loginFormUrl = res.url || currentUrl
+        break
+      }
+    }
+
+    if (!loginFormHtml) throw new Error('Could not reach login form')
+
+    // Parse form
+    const formUrl = extractFormAction(loginFormHtml, loginFormUrl, domain)
+    const hidden = extractHiddenFields(loginFormHtml)
+
     const body = new URLSearchParams({
       ...hidden,
       p_email: DEMO_EMAIL,
@@ -186,97 +172,96 @@ export async function GET(request: Request) {
       password: DEMO_PASSWORD,
     })
 
-    // Submit the form and follow the redirect chain
-    let authCode: string | null = null
-    let nextUrl: string | null = formUrl
-
+    // Submit form
     const submitRes = await fetch(formUrl, {
       method: 'POST',
       redirect: 'manual',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        Cookie: cookieHeader(jar),
-        Referer: finalUrl,
+        Cookie: jar.join('; '),
+        Referer: loginFormUrl,
         'User-Agent': 'Mozilla/5.0',
       },
       body: body.toString(),
     })
-
     jar = mergeCookieJar(jar, parseCookies(submitRes.headers))
-    nextUrl = submitRes.headers.get('location')
 
-    // Follow the post-submit redirect chain looking for ?code=
-    let hops = 0
-    while (nextUrl && hops < 10) {
+    // Follow post-submit redirects to capture ?code=
+    let nextUrl: string | null = submitRes.headers.get('location')
+    for (let hop = 0; hop < 10 && nextUrl; hop++) {
       const full = nextUrl.startsWith('http') ? nextUrl : `https://${domain}${nextUrl}`
       const parsed = new URL(full)
 
       if (parsed.searchParams.has('code')) {
-        authCode = parsed.searchParams.get('code')
-        break
+        const authCode = parsed.searchParams.get('code')!
+        return exchangeAndLogin(authCode, verifier, redirectUri, domain, clientId, clientSecret, origin, request)
       }
 
-      // If it's redirecting back to our own route — it's the callback
-      if (full.includes('/api/demo-login') && parsed.searchParams.has('code')) {
-        authCode = parsed.searchParams.get('code')
-        break
-      }
-
-      const hop = await fetch(full, {
+      const hopRes = await fetch(full, {
         redirect: 'manual',
-        headers: { Cookie: cookieHeader(jar), 'User-Agent': 'Mozilla/5.0' },
+        headers: { Cookie: jar.join('; '), 'User-Agent': 'Mozilla/5.0' },
       })
-      jar = mergeCookieJar(jar, parseCookies(hop.headers))
-      nextUrl = hop.headers.get('location')
-      hops++
-    }
-
-    if (authCode) {
-      // Exchange immediately — skip the browser redirect entirely
-      const tokenRes = await fetch(`https://${domain}/oauth2/token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          grant_type: 'authorization_code',
-          code: authCode,
-          redirect_uri: redirectUri,
-          client_id: clientId,
-          client_secret: clientSecret,
-          code_verifier: verifier,
-        }),
-      })
-
-      if (tokenRes.ok) {
-        const { access_token, id_token, refresh_token } = await tokenRes.json()
-        const accessPayload = decodeJwt(access_token)
-        const idPayload = decodeJwt(id_token)
-        const user = {
-          id: idPayload.sub,
-          email: idPayload.email,
-          given_name: idPayload.given_name,
-          family_name: idPayload.family_name,
-          picture: idPayload.picture ?? null,
-        }
-
-        const res = NextResponse.redirect(new URL('/dashboard', origin))
-        res.cookies.set('access_token', access_token, COOKIE_OPTS)
-        res.cookies.set('id_token', id_token, COOKIE_OPTS)
-        res.cookies.set('refresh_token', refresh_token, COOKIE_OPTS)
-        res.cookies.set('user', JSON.stringify(user), COOKIE_OPTS)
-        res.cookies.set('access_token_payload', JSON.stringify(accessPayload), COOKIE_OPTS)
-        res.cookies.set('id_token_payload', JSON.stringify(idPayload), COOKIE_OPTS)
-        return res
-      }
+      jar = mergeCookieJar(jar, parseCookies(hopRes.headers))
+      nextUrl = hopRes.headers.get('location')
     }
   } catch (err) {
     console.error('[demo-login] form simulation failed:', err)
   }
 
-  // ── Fallback: let Kinde handle the redirect back to us ───────────────────────
-  // Store PKCE verifier + state in short-lived cookies, then redirect user to Kinde
-  // Kinde will call back /api/demo-login?code=...&state=... and we handle it above
+  // ── Fallback: redirect user to Kinde UI, catch the callback ──────────────
   const res = NextResponse.redirect(authUrl)
   res.cookies.set('_dv', verifier, { ...COOKIE_OPTS, maxAge: 300 })
   res.cookies.set('_ds', state, { ...COOKIE_OPTS, maxAge: 300 })
   return res
+}
+
+async function exchangeAndLogin(
+  code: string,
+  verifier: string,
+  redirectUri: string,
+  domain: string,
+  clientId: string,
+  clientSecret: string,
+  origin: string,
+  request: Request
+): Promise<NextResponse> {
+  const tokenRes = await fetch(`https://${domain}/oauth2/token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: redirectUri,
+      client_id: clientId,
+      client_secret: clientSecret,
+      code_verifier: verifier,
+    }),
+  })
+
+  if (!tokenRes.ok) {
+    console.error('[demo-login] token exchange failed:', await tokenRes.text())
+    return NextResponse.redirect(new URL('/demo', request.url))
+  }
+
+  const { access_token, id_token, refresh_token } = await tokenRes.json()
+  const accessPayload = decodeJwt(access_token)
+  const idPayload = decodeJwt(id_token)
+  const user = {
+    id: idPayload.sub,
+    email: idPayload.email,
+    given_name: idPayload.given_name,
+    family_name: idPayload.family_name,
+    picture: idPayload.picture ?? null,
+  }
+
+  const response = NextResponse.redirect(new URL('/dashboard', origin))
+  response.cookies.set('access_token', access_token, COOKIE_OPTS)
+  response.cookies.set('id_token', id_token, COOKIE_OPTS)
+  response.cookies.set('refresh_token', refresh_token, COOKIE_OPTS)
+  response.cookies.set('user', JSON.stringify(user), COOKIE_OPTS)
+  response.cookies.set('access_token_payload', JSON.stringify(accessPayload), COOKIE_OPTS)
+  response.cookies.set('id_token_payload', JSON.stringify(idPayload), COOKIE_OPTS)
+  response.cookies.set('_dv', '', { maxAge: 0, path: '/' })
+  response.cookies.set('_ds', '', { maxAge: 0, path: '/' })
+  return response
 }
