@@ -22,7 +22,8 @@
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed.ts",
     "db:assign-tickets": "tsx src/db/assign-tickets.ts",
-    "db:assign-nick": "tsx src/db/assign-tickets-simple.ts"
+    "db:assign-nick": "tsx src/db/assign-tickets-simple.ts",
+    "demo:setup": "tsx scripts/setup-demo-user.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
