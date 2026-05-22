@@ -118,7 +118,7 @@ export async function GET(request: Request) {
       client_id: clientId,
       redirect_uri: redirectUri,
       response_type: 'code',
-      scope: 'openid profile email offline_access',
+      scope: 'openid profile email',
       state,
       code_challenge: challenge,
       code_challenge_method: 'S256',
@@ -257,7 +257,7 @@ async function exchangeAndLogin(
   const response = NextResponse.redirect(new URL('/dashboard', origin))
   response.cookies.set('access_token', access_token, COOKIE_OPTS)
   response.cookies.set('id_token', id_token, COOKIE_OPTS)
-  response.cookies.set('refresh_token', refresh_token, COOKIE_OPTS)
+  if (refresh_token) response.cookies.set('refresh_token', refresh_token, COOKIE_OPTS)
   response.cookies.set('user', JSON.stringify(user), COOKIE_OPTS)
   response.cookies.set('access_token_payload', JSON.stringify(accessPayload), COOKIE_OPTS)
   response.cookies.set('id_token_payload', JSON.stringify(idPayload), COOKIE_OPTS)
