@@ -5,7 +5,6 @@ import { init as kindeInit, Users } from '@kinde/management-api-js'
 
 const DEMO_EMAIL = 'demo@repairshop.com'
 const DEMO_PASSWORD = 'Demo@1234'
-const CONNECTION_ID = 'conn_01981ffad05500c459878e276a344b80'
 
 const COOKIE_OPTS = {
   httpOnly: true,
@@ -122,7 +121,6 @@ export async function GET(request: Request) {
       state,
       code_challenge: challenge,
       code_challenge_method: 'S256',
-      connection_id: CONNECTION_ID,
       login_hint: DEMO_EMAIL,
     })
 
