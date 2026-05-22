@@ -28,7 +28,7 @@ export function DemoBar() {
       </span>
       <div className="flex items-center gap-3 flex-shrink-0">
         <Link
-          href="/api/demo-login"
+          href="/demo"
           className="rounded bg-white px-3 py-1 text-[#1e40af] font-semibold text-sm hover:bg-blue-50 transition-colors whitespace-nowrap"
         >
           Try Demo →
