@@ -11,7 +11,7 @@ export default function Home() {
           Francisco Repair Shop
         </div>
         <Link
-          href="/demo"
+          href="/api/demo-login"
           className="rounded-md bg-[#1e40af] px-4 py-2 text-sm font-medium text-white hover:bg-blue-900 transition-colors"
         >
           Try Demo
@@ -29,7 +29,7 @@ export default function Home() {
           Customer management, repair tickets, and analytics — all in one place.
         </p>
         <Link
-          href="/demo"
+          href="/api/demo-login"
           className="inline-block rounded-lg bg-[#1e40af] px-8 py-4 text-lg font-semibold text-white hover:bg-blue-900 transition-colors shadow-lg"
         >
           Try Demo →
