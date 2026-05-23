@@ -124,14 +124,17 @@ export async function GET(request: Request) {
       login_hint: DEMO_EMAIL,
     })
 
-  // ── Step 3: Server-side form simulation ───────────────────────────────────
+  // ── Step 3: Server-side form simulation (multi-step) ──────────────────────
+  // Kinde's login is a 2-step flow: email screen first, then password screen.
+  // We submit each step in sequence, following redirects between them, until
+  // we either land on the OAuth callback with ?code= or run out of steps.
   try {
     let jar: string[] = []
 
-    // Follow Kinde's redirect chain to the login form
+    // 3a. Follow Kinde's redirect chain until we reach the first login form.
     let currentUrl = authUrl
-    let loginFormHtml = ''
-    let loginFormUrl = ''
+    let formHtml = ''
+    let formUrl = ''
 
     for (let i = 0; i < 6; i++) {
       const res = await fetch(currentUrl, {
@@ -143,64 +146,79 @@ export async function GET(request: Request) {
       if (res.status >= 300 && res.status < 400) {
         const loc = res.headers.get('location') ?? ''
         currentUrl = loc.startsWith('http') ? loc : `https://${domain}${loc}`
-
-        // If Kinde already redirected back to us with a code
         if (currentUrl.includes('/api/demo-login') && new URL(currentUrl).searchParams.has('code')) {
           const authCode = new URL(currentUrl).searchParams.get('code')!
           return exchangeAndLogin(authCode, verifier, redirectUri, domain, clientId, clientSecret, origin, request)
         }
       } else {
-        loginFormHtml = await res.text()
-        loginFormUrl = res.url || currentUrl
+        formHtml = await res.text()
+        formUrl = res.url || currentUrl
         break
       }
     }
 
-    if (!loginFormHtml) throw new Error('Could not reach login form')
+    if (!formHtml) throw new Error('Could not reach login form')
 
-    // Parse form
-    const formUrl = extractFormAction(loginFormHtml, loginFormUrl, domain)
-    const hidden = extractHiddenFields(loginFormHtml)
+    // 3b. Iterate through form steps: detect which fields are present (email
+    //     and/or password), POST them, follow redirects, repeat with the next
+    //     form HTML if we land on another page instead of the OAuth callback.
+    for (let step = 0; step < 4; step++) {
+      const actionUrl = extractFormAction(formHtml, formUrl, domain)
+      const hidden = extractHiddenFields(formHtml)
 
-    const body = new URLSearchParams({
-      ...hidden,
-      p_email: DEMO_EMAIL,
-      email: DEMO_EMAIL,
-      p_password: DEMO_PASSWORD,
-      password: DEMO_PASSWORD,
-    })
-
-    // Submit form
-    const submitRes = await fetch(formUrl, {
-      method: 'POST',
-      redirect: 'manual',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Cookie: jar.join('; '),
-        Referer: loginFormUrl,
-        'User-Agent': 'Mozilla/5.0',
-      },
-      body: body.toString(),
-    })
-    jar = mergeCookieJar(jar, parseCookies(submitRes.headers))
-
-    // Follow post-submit redirects to capture ?code=
-    let nextUrl: string | null = submitRes.headers.get('location')
-    for (let hop = 0; hop < 10 && nextUrl; hop++) {
-      const full = nextUrl.startsWith('http') ? nextUrl : `https://${domain}${nextUrl}`
-      const parsed = new URL(full)
-
-      if (parsed.searchParams.has('code')) {
-        const authCode = parsed.searchParams.get('code')!
-        return exchangeAndLogin(authCode, verifier, redirectUri, domain, clientId, clientSecret, origin, request)
+      const body = new URLSearchParams({ ...hidden })
+      if (/name=["'](p_)?email["']/i.test(formHtml)) {
+        body.set('p_email', DEMO_EMAIL)
+        body.set('email', DEMO_EMAIL)
+      }
+      if (/name=["'](p_)?password["']/i.test(formHtml)) {
+        body.set('p_password', DEMO_PASSWORD)
+        body.set('password', DEMO_PASSWORD)
       }
 
-      const hopRes = await fetch(full, {
+      const submitRes = await fetch(actionUrl, {
+        method: 'POST',
         redirect: 'manual',
-        headers: { Cookie: jar.join('; '), 'User-Agent': 'Mozilla/5.0' },
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Cookie: jar.join('; '),
+          Referer: formUrl,
+          'User-Agent': 'Mozilla/5.0',
+        },
+        body: body.toString(),
       })
-      jar = mergeCookieJar(jar, parseCookies(hopRes.headers))
-      nextUrl = hopRes.headers.get('location')
+      jar = mergeCookieJar(jar, parseCookies(submitRes.headers))
+
+      // Follow redirects after the POST until we hit code= or an HTML page.
+      let nextUrl: string | null = submitRes.headers.get('location')
+      let landedHtml = ''
+      let landedUrl = ''
+
+      for (let hop = 0; hop < 10 && nextUrl; hop++) {
+        const full = nextUrl.startsWith('http') ? nextUrl : `https://${domain}${nextUrl}`
+        const parsed = new URL(full)
+        if (parsed.searchParams.has('code')) {
+          const authCode = parsed.searchParams.get('code')!
+          return exchangeAndLogin(authCode, verifier, redirectUri, domain, clientId, clientSecret, origin, request)
+        }
+        const hopRes = await fetch(full, {
+          redirect: 'manual',
+          headers: { Cookie: jar.join('; '), 'User-Agent': 'Mozilla/5.0' },
+        })
+        jar = mergeCookieJar(jar, parseCookies(hopRes.headers))
+        const loc = hopRes.headers.get('location')
+        if (loc) {
+          nextUrl = loc
+        } else {
+          landedHtml = await hopRes.text()
+          landedUrl = hopRes.url || full
+          break
+        }
+      }
+
+      if (!landedHtml) throw new Error('Form step ended without next page or code')
+      formHtml = landedHtml
+      formUrl = landedUrl
     }
   } catch (err) {
     console.error('[demo-login] form simulation failed:', err)
