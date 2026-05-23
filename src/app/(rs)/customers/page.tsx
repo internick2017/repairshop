@@ -4,6 +4,7 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { redirect } from "next/navigation";
 import { CustomersPageClient } from "./CustomersPageClient";
 import { Breadcrumb } from "@/components/Breadcrumb";
+import { isNextNavigationError } from "@/lib/utils/is-next-error";
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -53,6 +54,7 @@ export default async function CustomersPage({ searchParams }: CustomersPageProps
             </div>
         );
     } catch (error) {
+        if (isNextNavigationError(error)) throw error;
         console.error('Customers Page Error:', error);
         return (
             <div className="max-w-7xl mx-auto p-6">

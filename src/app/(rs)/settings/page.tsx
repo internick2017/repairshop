@@ -3,6 +3,7 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { redirect } from "next/navigation";
 import { SettingsClient } from "./SettingsClient";
 import * as Sentry from "@sentry/nextjs";
+import { isNextNavigationError } from "@/lib/utils/is-next-error";
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -30,6 +31,8 @@ export default async function SettingsPage() {
 
         return <SettingsClient user={user} isManager={isManager} />;
     } catch (error) {
+        if (isNextNavigationError(error)) throw error;
+
         Sentry.captureException(error, {
             tags: { component: 'SettingsPage', action: 'load_settings' }
         });

@@ -11,6 +11,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Suspense } from "react";
 import { FormSkeleton } from "@/components/FormSkeleton";
 import { fetchKindeUsers, type TechUser } from "@/lib/utils/tech-assignment";
+import { isNextNavigationError } from "@/lib/utils/is-next-error";
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -178,6 +179,9 @@ export default async function TicketFormPage({ searchParams }: TicketFormPagePro
             </div>
         );
     } catch (error) {
+        // Re-throw Next.js navigation signals so redirect() and notFound() actually work
+        if (isNextNavigationError(error)) throw error;
+
         // Enhanced error logging
         const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
 

@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { redirect } from "next/navigation";
 import { UserManagement } from "./UserManagement";
+import { isNextNavigationError } from "@/lib/utils/is-next-error";
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -49,6 +50,7 @@ export default async function UsersPage() {
         );
 
     } catch (error) {
+        if (isNextNavigationError(error)) throw error;
         console.error('Error loading users page:', error);
         redirect("/tickets");
     }

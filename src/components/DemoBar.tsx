@@ -14,7 +14,7 @@ export function DemoBar() {
     if (!dismissed) setVisible(true)
   }, [])
 
-  if (!visible || pathname === '/demo') return null
+  if (!visible || pathname !== '/') return null
 
   const dismiss = () => {
     sessionStorage.setItem('demo-bar-dismissed', '1')
