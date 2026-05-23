@@ -13,6 +13,8 @@ import { UrlPagination } from "@/components/pagination/UrlPagination";
 import { fetchCustomers } from "@/lib/api/customers";
 import Link from "next/link";
 import { useDebounce } from "@/lib/hooks/use-debounce";
+import { useRouter } from "next/navigation";
+import { MousePointerClick } from "lucide-react";
 
 type Customer = InferSelectModel<typeof customers>;
 
@@ -22,6 +24,12 @@ interface CustomersPageClientProps {
 }
 
 export function CustomersPageClient({ customers: initialCustomers, selectMode }: CustomersPageClientProps) {
+    const router = useRouter();
+
+    const handleCustomerSelect = useCallback((customer: Customer) => {
+        router.push(`/tickets/form?customerId=${customer.id}&from=customers`);
+    }, [router]);
+
     // Use polling for live updates
     const {
         data: liveCustomers,
@@ -244,6 +252,16 @@ export function CustomersPageClient({ customers: initialCustomers, selectMode }:
                 )}
             </div>
 
+            {/* Select Mode Banner */}
+            {selectMode && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 flex items-center gap-3">
+                    <MousePointerClick className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                    <p className="text-sm text-blue-900 dark:text-blue-200">
+                        <span className="font-semibold">Click any customer row</span> to create a repair ticket for them.
+                    </p>
+                </div>
+            )}
+
             {/* Search Bar and Live Update Controls */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-4">
                 <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -387,9 +405,10 @@ export function CustomersPageClient({ customers: initialCustomers, selectMode }:
 
             {/* Customer Table */}
             {paginatedData.data.length > 0 && (
-                <CustomerTable 
-                    customers={paginatedData.data} 
+                <CustomerTable
+                    customers={paginatedData.data}
                     selectMode={selectMode}
+                    onCustomerSelect={handleCustomerSelect}
                 />
             )}
 
